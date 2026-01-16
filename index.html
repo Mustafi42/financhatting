@@ -2,157 +2,1549 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanChatting - Canlı Finans ve Sosyal Medya</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Finans Network Master</title>
+    <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --accent-color: #38bdf8;
-            --border-color: #334155;
+        :root { 
+            --bg: #0f1419; 
+            --card: #1c2128; 
+            --primary: #3b82f6; 
+            --primary-hover: #2563eb;
+            --text: #e1e8ed;
+            --text-muted: #8b98a5;
+            --accent: #8b5cf6;
+            --border: #30363d;
+            --success: #10b981;
+            --danger: #ef4444;
         }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
+        * { box-sizing: border-box; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            min-height: 100vh;
         }
-        .header {
-            background: var(--card-bg);
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        .nav { 
+            background: var(--card);
+            padding: 15px 40px; 
+            border-radius: 12px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 300px 1fr 300px;
+        .nav-links {
+            display: flex;
             gap: 20px;
-            padding: 20px;
+            align-items: center;
         }
-        /* Market Kartları */
-        .market-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border: 1px solid var(--border-color);
+        .nav-link {
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid transparent;
         }
-        .market-value {
-            font-size: 1.2rem;
+        .nav-link:hover {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .nav-link.active {
+            color: white;
+            background: var(--primary);
+        }
+        .icon-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
             font-weight: bold;
-            color: var(--accent-color);
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
         }
-        /* Feed Alanı */
-        .feed-item {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
+        .icon-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            transform: scale(1.1);
         }
-        /* Mobilde Grid Ayarı */
+        .mini-btn {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        .mini-btn:hover {
+            background: rgba(0, 212, 255, 0.2);
+            transform: scale(1.05);
+        }
+        .mini-btn.delete-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        .mini-btn.delete-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+        }
+        
+        /* Responsive Design */
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .nav {
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .nav h2 {
+                font-size: 18px;
+            }
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 8px;
+            }
+            .nav-link {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            .grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 12px;
+            }
+            .card {
+                padding: 16px;
+            }
+            .card-logo {
+                font-size: 32px;
+            }
+            .price {
+                font-size: 18px;
+            }
+            .modal-box {
+                width: 95%;
+                padding: 20px;
+            }
+            .period-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            .post, .comment {
+                padding: 14px;
+            }
+            .post-avatar, .comment-avatar {
+                font-size: 24px;
+            }
             .container {
+                max-width: 100%;
+                margin: 0;
+            }
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 48px;
+            }
+            #candlestick-chart-container {
+                height: 350px !important;
+            }
+            .economic-card {
+                padding: 14px;
+            }
+            .economic-icon {
+                font-size: 28px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav h2 {
+                font-size: 16px;
+            }
+            .grid {
                 grid-template-columns: 1fr;
             }
-            .sidebar-left, .sidebar-right {
-                display: none;
+            .modal-box {
+                padding: 16px;
             }
+            .period-btn {
+                padding: 6px 10px;
+                font-size: 12px;
+            }
+            #candlestick-chart-container {
+                height: 300px !important;
+            }
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                padding: 10px;
+            }
+        }
+        
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 30px;
+        }
+        .card { 
+            background: var(--card);
+            border-radius: 12px; 
+            padding: 24px; 
+            border: 1px solid var(--border); 
+            transition: all 0.2s ease;
+        }
+        .card.clickable {
+            cursor: pointer;
+        }
+        .card.clickable:hover { 
+            border-color: var(--primary); 
+            transform: translateY(-4px);
+        }
+        .card-logo {
+            font-size: 42px;
+            margin-bottom: 8px;
+        }
+        .card-name {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .price { 
+            font-size: 24px; 
+            font-weight: 700; 
+            color: var(--text); 
+            margin-top: 10px;
+        }
+        .economic-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 18px;
+            border-left: 3px solid;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+        }
+        .economic-card:hover {
+            transform: translateX(4px);
+        }
+        .economic-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .economic-name {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .economic-value {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 8px;
+        }
+        .economic-date {
+            font-size: 12px;
+            color: #64748b;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .economic-description {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        .section-title {
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 900;
+            margin: 30px 0 20px 0;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        .container { 
+            max-width: 900px; 
+            margin: 30px auto; 
+        }
+        .post { 
+            background: var(--card);
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .post:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .post-avatar {
+            font-size: 32px;
+        }
+        .post-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #64748b;
+        }
+        .comment {
+            background: var(--card);
+            padding: 16px; 
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+            border: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+        }
+        .comment-avatar {
+            font-size: 28px;
+        }
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0, 0, 0, 0.85); 
+            z-index: 1000; 
+            align-items: center; 
+            justify-content: center; 
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .modal-box { 
+            background: var(--card);
+            width: 90%; 
+            max-width: 900px; 
+            padding: 32px; 
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .period-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .period-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .period-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        input, textarea { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 10px; 
+            border: 1px solid rgba(0, 212, 255, 0.2); 
+            background: rgba(10, 14, 39, 0.8); 
+            color: white; 
+            margin-bottom: 12px;
+            font-family: 'Inter', sans-serif;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        button {
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .profile-header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        .profile-avatar {
+            font-size: 80px;
+            margin-bottom: 15px;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%);
+            border: 3px solid rgba(0, 212, 255, 0.3);
+        }
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-option {
+            font-size: 32px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .avatar-option:hover {
+            transform: scale(1.2);
+            background: rgba(0, 212, 255, 0.1);
+        }
+        .avatar-option.selected {
+            background: rgba(0, 212, 255, 0.2);
+            border: 2px solid var(--primary);
+            transform: scale(1.15);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+        }
+        .star-rating {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        .star {
+            font-size: 20px;
+            color: #475569;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .star.filled {
+            color: #fbbf24;
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.6), 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .star:hover {
+            transform: scale(1.3);
+            filter: brightness(1.2);
+        }
+        .rating-count {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-left: 8px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 6px;
+            cursor: help;
+        }
+        .modal-box.fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            border-radius: 0 !important;
+        }
+        .modal-box.fullscreen #candlestick-chart-container {
+            height: calc(100vh - 200px) !important;
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
-            <h1 style="margin: 0; color: var(--accent-color); font-size: 1.5rem;">FinanChatting</h1>
-            <div id="user-menu">
-                </div>
-        </div>
-    </header>
 
-    <div class="container">
-        <aside class="sidebar-left">
-            <h3>Canlı Piyasalar</h3>
-            <div id="market-list">
-                Yükleniyor...
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <div class="market-card">
-                <h3>Ne Düşünüyorsun?</h3>
-                <textarea id="post-content" style="width: 100%; background: #0f172a; border: 1px solid var(--border-color); color: white; border-radius: 8px; padding: 10px;" rows="3" placeholder="Finans dünyasına dair bir şeyler yaz..."></textarea>
-                <button onclick="sharePost()" style="margin-top: 10px; background: var(--accent-color); border: none; padding: 10px 20px; border-radius: 8px; color: #0f172a; font-weight: bold; cursor: pointer;">Paylaş</button>
-            </div>
-            <div id="feed-container">
-                </div>
-        </main>
-
-        <aside class="sidebar-right">
-            <h3>Ekonomik Takvim</h3>
-            <div id="calendar-list">
-                Takvim yükleniyor...
-            </div>
-        </aside>
+<div class="nav">
+    <h2 style="color:var(--primary); margin:0;">📊 Finans Network Master</h2>
+    
+    <div class="nav-links" id="nav-links" style="display:none;">
+        <span class="nav-link active" onclick="showSection('market')">🏠 Piyasa</span>
+        <span class="nav-link" onclick="showSection('feed')">🌐 Feed</span>
+        <span class="nav-link" onclick="showSection('profile')">👤 Profilim</span>
     </div>
+    
+    <div id="auth-ui">
+        <button onclick="openAuth('login')" class="btn-primary">Giriş Yap</button>
+        <button onclick="openAuth('reg')" class="btn-secondary" style="margin-left:10px;">Kayıt Ol</button>
+    </div>
+    <div id="user-ui" style="display:none;">
+        <span id="user-avatar" style="font-size:24px; margin-right:8px;"></span>
+        <b id="user-name" style="color:var(--primary)"></b>
+        <button onclick="logout()" class="btn-secondary" style="margin-left:15px; padding:6px 12px;">🚪 Çıkış</button>
+    </div>
+</div>
 
-    <script>
-        // Sayfa yüklendiğinde verileri çek
-        async function init() {
-            updateMarketData();
-            updateCalendar();
-            updateFeed();
-            setInterval(updateMarketData, 30000); // 30 saniyede bir güncelle
-        }
+<div id="market-section" class="section active">
+    <h2 class="section-title">💹 Canlı Piyasa Verileri</h2>
+    <div class="grid" id="market-list"></div>
+    
+    <h2 class="section-title">📅 Ekonomik Takvim & Makro Veriler</h2>
+    <div class="grid" id="economic-calendar" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
+</div>
 
-        async function updateMarketData() {
-            const res = await fetch('/api/market-data');
-            const data = await res.json();
-            const container = document.getElementById('market-list');
-            container.innerHTML = Object.values(data).map(item => `
-                <div class="market-card">
-                    <div>${item.logo} ${item.name}</div>
-                    <div class="market-value">${item.value}</div>
+<div id="feed-section" class="section">
+    <div class="container">
+        <div id="post-box" style="display:none;" class="card">
+            <textarea id="post-input" placeholder="Piyasa yorumunu paylaş..." rows="3"></textarea>
+            <button onclick="submitPost()" class="btn-primary">📤 Paylaş</button>
+        </div>
+        <h3 style="color: var(--primary); margin-bottom: 20px;">🌐 Küresel Feed</h3>
+        <div id="global-feed"></div>
+    </div>
+</div>
+
+<div id="profile-section" class="section">
+    <div class="container">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profile-avatar">👤</div>
+            <h2 style="color: var(--primary); margin:10px 0;" id="profile-username">@kullanici</h2>
+            <p style="color: #94a3b8; margin:5px 0;" id="profile-fullname">Ad Soyad</p>
+            <p style="color: #cbd5e1; margin:15px 0;" id="profile-bio">Biyografi</p>
+            <div style="display:flex; gap:30px; justify-content:center; margin-top:20px;">
+                <div><div style="font-size:28px; font-weight:900; color:var(--primary);" id="profile-posts">0</div><div style="font-size:12px; color:#94a3b8;">Gönderi</div></div>
+                <div><div style="font-size:28px; font-weight:900; color:var(--primary);" id="profile-comments">0</div><div style="font-size:12px; color:#94a3b8;">Yorum</div></div>
+                <div><div style="font-size:28px; font-weight:900; color:var(--primary);" id="profile-joined">2026</div><div style="font-size:12px; color:#94a3b8;">Katılım</div></div>
+            </div>
+            <button onclick="openProfileEdit()" class="btn-primary" style="margin-top:20px;">✏️ Profili Düzenle</button>
+        </div>
+        <h3 style="color: var(--primary); margin: 30px 0 20px 0;">📝 Gönderilerim</h3>
+        <div id="profile-posts-list"></div>
+    </div>
+</div>
+
+<div id="asset-modal" class="modal">
+    <div class="modal-box" id="chart-modal-box">
+        <div style="position: relative; margin-bottom: 20px;">
+            <h2 id="modal-title" style="color: var(--primary); margin: 0; text-align: center;"></h2>
+            <div style="position: absolute; top: 0; right: 0; display: flex; gap: 10px;">
+                <button onclick="toggleFullscreen()" class="icon-btn" title="Tam Ekran (F)">⛶</button>
+                <button onclick="closeAssetModal()" class="icon-btn" title="Kapat (ESC)">✕</button>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; margin:20px 0; justify-content:center; flex-wrap: wrap;">
+            <button class="period-btn active" onclick="changePeriod('daily')">📅 Günlük</button>
+            <button class="period-btn" onclick="changePeriod('weekly')">📊 Haftalık</button>
+            <button class="period-btn" onclick="changePeriod('monthly')">📈 Aylık</button>
+            <button class="period-btn" id="volume-toggle" onclick="toggleVolume()" style="margin-left: 10px;">📊 Hacim: Açık</button>
+        </div>
+        <div id="candlestick-chart-container" style="height: 500px; width: 100%; background: var(--card); border-radius: 12px; border: 1px solid var(--border);"></div>
+        <div style="margin-top:30px; padding-top:20px; border-top:2px solid rgba(0, 212, 255, 0.2);">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">💬 Yorumlar</h3>
+            <div id="comment-box" style="display:none; margin-bottom:20px;">
+                <textarea id="comment-input" placeholder="Bu varlık hakkında ne düşünüyorsun?" rows="2"></textarea>
+                <button onclick="submitComment()" class="btn-primary">💬 Yorum Yap</button>
+            </div>
+            <div id="comments-list"></div>
+        </div>
+        <button onclick="closeAssetModal()" class="btn-secondary" style="margin-top:25px; width:100%; padding:12px; display:none;">✖️ Kapat</button>
+    </div>
+</div>
+
+<div id="post-modal" class="modal">
+    <div class="modal-box">
+        <div style="position: relative; margin-bottom: 20px;">
+            <div style="position: absolute; top: 0; right: 0;">
+                <button onclick="closePostModal()" class="icon-btn" title="Kapat (ESC)">✕</button>
+            </div>
+        </div>
+        <div id="post-detail-content"></div>
+        <div style="margin-top:30px; padding-top:20px; border-top:2px solid rgba(0, 212, 255, 0.2);">
+            <h3 style="color: var(--primary); margin-bottom: 15px;">💬 Yorumlar</h3>
+            <div id="post-comment-box" style="display:none; margin-bottom:20px;">
+                <textarea id="post-comment-input" placeholder="Bu gönderi hakkında ne düşünüyorsun?" rows="2"></textarea>
+                <button onclick="submitPostComment()" class="btn-primary">💬 Yorum Yap</button>
+            </div>
+            <div id="post-comments-list"></div>
+        </div>
+        <button onclick="closePostModal()" class="btn-secondary" style="margin-top:25px; width:100%; padding:12px; display:none;">✖️ Kapat</button>
+    </div>
+</div>
+
+<div id="profile-edit-modal" class="modal">
+    <div class="modal-box" style="max-width:500px;">
+        <h3 style="color: var(--primary); text-align: center; margin-bottom:20px;">✏️ Profili Düzenle</h3>
+        <label style="color: #94a3b8; font-size:14px; margin-bottom:8px; display:block;">Avatar Seç:</label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:15px 0;">
+            <span class="avatar-option" onclick="selectAvatar('👤')">👤</span>
+            <span class="avatar-option" onclick="selectAvatar('😎')">😎</span>
+            <span class="avatar-option" onclick="selectAvatar('🚀')">🚀</span>
+            <span class="avatar-option" onclick="selectAvatar('💎')">💎</span>
+            <span class="avatar-option" onclick="selectAvatar('🎯')">🎯</span>
+            <span class="avatar-option" onclick="selectAvatar('⚡')">⚡</span>
+            <span class="avatar-option" onclick="selectAvatar('🔥')">🔥</span>
+            <span class="avatar-option" onclick="selectAvatar('🌟')">🌟</span>
+            <span class="avatar-option" onclick="selectAvatar('💰')">💰</span>
+            <span class="avatar-option" onclick="selectAvatar('🦁')">🦁</span>
+        </div>
+        
+        <div style="text-align:center; margin:20px 0;">
+            <label style="color: #94a3b8; font-size:14px; display:block; margin-bottom:10px;">Veya Profil Fotoğrafı Yükle:</label>
+            <input type="file" id="profile-image-input" accept="image/*" style="display:none;" onchange="handleImageUpload(event)">
+            <button onclick="document.getElementById('profile-image-input').click()" class="btn-secondary" style="padding:10px 20px;">📷 Fotoğraf Seç</button>
+            <div id="image-preview" style="margin-top:15px; display:none;">
+                <img id="preview-img" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid var(--primary);">
+                <div style="margin-top:8px;">
+                    <button onclick="removeProfileImage()" class="btn-secondary" style="padding:6px 12px; font-size:12px;">🗑️ Fotoğrafı Kaldır</button>
                 </div>
-            `).join('');
-        }
+            </div>
+        </div>
+        <label style="color: #94a3b8; font-size:14px; margin:15px 0 8px 0; display:block;">Biyografi:</label>
+        <textarea id="edit-bio" placeholder="Kendin hakkında birkaç şey yaz..." rows="4"></textarea>
+        <button onclick="saveProfile()" class="btn-primary" style="width:100%; padding:14px; margin-top:10px;">💾 Kaydet</button>
+        <button onclick="closeProfileEdit()" class="btn-secondary" style="width:100%; padding:12px; margin-top:10px;">İptal</button>
+    </div>
+</div>
 
-        async function updateCalendar() {
-            const res = await fetch('/api/economic-calendar');
-            const data = await res.json();
-            const container = document.getElementById('calendar-list');
-            container.innerHTML = Object.values(data).map(item => `
-                <div class="market-card" style="font-size: 0.9rem;">
-                    <div>${item.icon} ${item.name}</div>
-                    <div style="color: ${item.color}">${item.current}</div>
-                    <div style="font-size: 0.7rem; color: #94a3b8;">Sıradaki: ${item.next_meeting || item.next_release}</div>
-                </div>
-            `).join('');
-        }
+<div id="auth-modal" class="modal">
+    <div class="modal-box" style="max-width:400px;">
+        <h3 id="auth-title" style="color: var(--primary); text-align: center;"></h3>
+        <div id="reg-fields" style="display:none;">
+            <input id="af-fn" placeholder="Ad Soyad">
+        </div>
+        <input id="af-un" placeholder="Kullanıcı Adı">
+        <input id="af-ps" type="password" placeholder="Şifre">
+        <button id="af-btn" class="btn-primary" style="width:100%; padding:14px; margin-top:10px;"></button>
+        <button onclick="closeAuthModal()" class="btn-secondary" style="width:100%; padding:12px; margin-top:10px;">İptal</button>
+    </div>
+</div>
 
-        async function updateFeed() {
-            const res = await fetch('/api/feed');
-            const data = await res.json();
-            const container = document.getElementById('feed-container');
-            container.innerHTML = data.map(post => `
-                <div class="feed-item">
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <span>${post.avatar}</span>
-                        <strong>${post.user}</strong>
-                        <small style="color: #64748b;">${post.timestamp}</small>
+<script>
+let lightweightChart = null;
+let candlestickSeries = null;
+let volumeSeries = null;
+let currentSymbol = null;
+let currentSymbolName = null;
+let currentPeriod = 'daily';
+let currentUser = null;
+let selectedAvatar = '👤';
+let currentPostId = null;
+let uploadedProfileImage = null;
+let isFullscreen = false;
+let showVolume = true;
+
+function toggleVolume() {
+    showVolume = !showVolume;
+    const btn = document.getElementById('volume-toggle');
+    
+    if (showVolume) {
+        btn.innerText = '📊 Hacim: Açık';
+        btn.style.background = 'rgba(0, 212, 255, 0.1)';
+        btn.style.borderColor = 'rgba(0, 212, 255, 0.3)';
+    } else {
+        btn.innerText = '📊 Hacim: Kapalı';
+        btn.style.background = 'rgba(100, 116, 139, 0.1)';
+        btn.style.borderColor = 'rgba(100, 116, 139, 0.3)';
+    }
+    
+    // Grafiği yeniden yükle
+    loadCandlestickChart(currentSymbol, currentPeriod);
+}
+
+function toggleFullscreen() {
+    const modalBox = document.getElementById('chart-modal-box');
+    const chartContainer = document.getElementById('candlestick-chart-container');
+    
+    isFullscreen = !isFullscreen;
+    
+    if (isFullscreen) {
+        modalBox.classList.add('fullscreen');
+    } else {
+        modalBox.classList.remove('fullscreen');
+    }
+    
+    // Grafik boyutunu güncelle
+    setTimeout(() => {
+        if (lightweightChart) {
+            const newHeight = isFullscreen ? window.innerHeight - 200 : 500;
+            lightweightChart.applyOptions({
+                width: chartContainer.clientWidth,
+                height: newHeight
+            });
+            lightweightChart.timeScale().fitContent();
+        }
+    }, 100);
+}
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Dosya boyutu kontrolü (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Fotoğraf boyutu 2MB\'dan küçük olmalı!');
+        return;
+    }
+    
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+        alert('Lütfen geçerli bir resim dosyası seçin!');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        uploadedProfileImage = e.target.result;
+        document.getElementById('preview-img').src = uploadedProfileImage;
+        document.getElementById('image-preview').style.display = 'block';
+        
+        // Emoji avatarları deselect et
+        document.querySelectorAll('.avatar-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeProfileImage() {
+    uploadedProfileImage = null;
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('profile-image-input').value = '';
+}
+
+function createStarRating(itemId, itemType, currentAvg, ratingCount) {
+    let stars = '';
+    for(let i = 1; i <= 5; i++) {
+        const filled = i <= Math.round(currentAvg) ? 'filled' : '';
+        stars += `<span class="star ${filled}" onmouseover="previewRating(this, ${i})" onmouseout="resetRating(this)" onclick="submitRating('${itemType}', ${itemId}, ${i})" title="⭐ ${i} yıldız ver">★</span>`;
+    }
+    const avgText = currentAvg > 0 ? currentAvg.toFixed(1) : '0.0';
+    const countText = ratingCount > 0 ? `<span class="rating-count" title="${ratingCount} kişi oy verdi">(${avgText} • ${ratingCount} oy)</span>` : '<span class="rating-count">(Henüz oy yok)</span>';
+    return `<div class="star-rating" data-avg="${currentAvg}" data-count="${ratingCount}">${stars}${countText}</div>`;
+}
+
+function previewRating(star, rating) {
+    const container = star.parentElement;
+    const stars = container.querySelectorAll('.star');
+    stars.forEach((s, idx) => {
+        if(idx < rating) {
+            s.classList.add('filled');
+        } else {
+            s.classList.remove('filled');
+        }
+    });
+}
+
+function resetRating(star) {
+    const container = star.parentElement;
+    const currentAvg = parseFloat(container.dataset.avg) || 0;
+    const stars = container.querySelectorAll('.star');
+    stars.forEach((s, idx) => {
+        if(idx < Math.round(currentAvg)) {
+            s.classList.add('filled');
+        } else {
+            s.classList.remove('filled');
+        }
+    });
+}
+
+function submitRating(itemType, itemId, rating) {
+    let endpoint = '';
+    let payload = { rating: rating };
+    
+    if(itemType === 'post') {
+        endpoint = '/api/rate-post';
+        payload.post_id = itemId;
+    } else if(itemType === 'post-comment') {
+        endpoint = '/api/rate-post-comment';
+        payload.comment_id = itemId;
+    } else if(itemType === 'asset-comment') {
+        endpoint = '/api/rate-asset-comment';
+        payload.comment_id = itemId;
+    }
+    
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.error) {
+            alert(d.error);
+        } else {
+            // Başarılı - sayfayı güncelle
+            if(itemType === 'post') {
+                fetchFeed();
+            } else if(itemType === 'post-comment') {
+                loadPostComments(currentPostId);
+            } else if(itemType === 'asset-comment') {
+                loadComments(currentSymbol);
+            }
+        }
+    })
+    .catch(err => alert('Oy kullanılamadı!'));
+}
+
+function logout() {
+    fetch('/api/logout', {method: 'POST'})
+        .then(() => location.reload())
+        .catch(err => alert('Çıkış yapılamadı!'));
+}
+
+function showSection(section) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById(section + '-section').classList.add('active');
+    event.target.classList.add('active');
+    if(section === 'profile') loadProfile();
+    else if(section === 'feed') fetchFeed();
+}
+
+function fetchEconomicCalendar() {
+    fetch('/api/economic-calendar')
+        .then(r => r.json())
+        .then(data => {
+            let html = "";
+            for(let key in data) {
+                const item = data[key];
+                html += `<div class="economic-card" style="border-color: ${item.color};">
+                    <div class="economic-icon">${item.icon}</div>
+                    <div class="economic-name">${item.name}</div>
+                    <div class="economic-value" style="color: ${item.color};">${item.current}</div>
+                    <div class="economic-date">📅 ${item.next_meeting || item.next_release}</div>
+                    <div class="economic-description">${item.description}</div>
+                </div>`;
+            }
+            document.getElementById('economic-calendar').innerHTML = html;
+        })
+        .catch(err => console.error('Economic calendar error:', err));
+}
+
+function fetchMarket() {
+    fetch('/api/market-data')
+        .then(r => r.json())
+        .then(data => {
+            let html = "";
+            for(let key in data) {
+                html += `<div class="card clickable" onclick="openAsset('${key}', '${data[key].name}')">
+                    <div class="card-logo">${data[key].logo}</div>
+                    <div class="card-name">${data[key].name}</div>
+                    <div class="price">${data[key].value}</div>
+                </div>`;
+            }
+            document.getElementById('market-list').innerHTML = html;
+        })
+        .catch(err => console.error('Market error:', err));
+}
+
+function fetchFeed() {
+    fetch('/api/feed')
+        .then(r => r.json())
+        .then(data => {
+            let html = "";
+            data.forEach(p => {
+                const isOwner = currentUser && p.user === currentUser;
+                const actionsHtml = isOwner ? `
+                    <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 5px;">
+                        <button onclick="event.stopPropagation(); editPost(${p.id}, '${p.content.replace(/'/g, "\\'")}');" class="mini-btn" title="Düzenle">✏️</button>
+                        <button onclick="event.stopPropagation(); deletePost(${p.id});" class="mini-btn delete-btn" title="Sil">🗑️</button>
                     </div>
-                    <div>${post.content}</div>
-                </div>
-            `).join('');
-        }
+                ` : '';
+                
+                html += `<div class="post" onclick="openPostDetail(${p.id})" style="position: relative;">
+                    ${actionsHtml}
+                    <div class="post-header">
+                        <div class="post-avatar">${p.avatar}</div>
+                        <div style="flex:1;"><b style="color:var(--primary);">@${p.user}</b><div style="color:#64748b; font-size:12px;">${p.timestamp}</div></div>
+                    </div>
+                    <p style="margin:0; color:#cbd5e1;">${p.content}</p>
+                    <div class="post-stats">
+                        <div>💬 ${p.comment_count} yorum</div>
+                        <div onclick="event.stopPropagation();">${createStarRating(p.id, 'post', p.rating_avg, p.rating_count)}</div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('global-feed').innerHTML = html || '<p style="text-align:center; color:#64748b;">Henüz gönderi yok. İlk sen ol! 🚀</p>';
+        })
+        .catch(err => console.error('Feed error:', err));
+}
 
-        init();
-    </script>
+function loadProfile() {
+    if(!currentUser) return;
+    fetch(`/api/profile/${currentUser}`)
+        .then(r => r.json())
+        .then(data => {
+            const avatarElement = document.getElementById('profile-avatar');
+            if (data.profile_image) {
+                avatarElement.innerHTML = `<img src="${data.profile_image}" alt="Profile">`;
+            } else {
+                avatarElement.innerHTML = data.avatar;
+            }
+            
+            document.getElementById('profile-username').innerText = '@' + data.username;
+            document.getElementById('profile-fullname').innerText = data.full_name;
+            
+            // Bio - boşsa gösterme
+            const bioElement = document.getElementById('profile-bio');
+            if (data.bio && data.bio.trim()) {
+                bioElement.innerText = data.bio;
+                bioElement.style.display = 'block';
+            } else {
+                bioElement.style.display = 'none';
+            }
+            
+            document.getElementById('profile-posts').innerText = data.total_posts;
+            document.getElementById('profile-comments').innerText = data.total_comments;
+            document.getElementById('profile-joined').innerText = data.joined_date.split('-')[0];
+            
+            let postsHtml = "";
+            data.posts.forEach(p => {
+                postsHtml += `<div class="post" onclick="openPostDetail(${p.id})">
+                    <div class="post-header">
+                        <div class="post-avatar">${p.avatar}</div>
+                        <div style="flex:1;"><b style="color:var(--primary);">@${data.username}</b><div style="color:#64748b; font-size:12px;">${p.timestamp}</div></div>
+                    </div>
+                    <p style="margin:0; color:#cbd5e1;">${p.content}</p>
+                    <div class="post-stats">
+                        <div>💬 ${p.comment_count} yorum</div>
+                        <div onclick="event.stopPropagation();">${createStarRating(p.id, 'post', p.rating_avg || 0, p.rating_count || 0)}</div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('profile-posts-list').innerHTML = postsHtml || '<p style="text-align:center; color:#64748b;">Henüz gönderi yok.</p>';
+        })
+        .catch(err => console.error('Profile error:', err));
+}
+
+function openPostDetail(postId) {
+    currentPostId = postId;
+    fetch('/api/feed')
+        .then(r => r.json())
+        .then(data => {
+            const post = data.find(p => p.id === postId);
+            if(!post) return;
+            document.getElementById('post-detail-content').innerHTML = `
+                <div class="post" style="cursor:default;">
+                    <div class="post-header">
+                        <div class="post-avatar">${post.avatar}</div>
+                        <div style="flex:1;"><b style="color:var(--primary);">@${post.user}</b><div style="color:#64748b; font-size:12px;">${post.timestamp}</div></div>
+                    </div>
+                    <p style="margin:0; color:#cbd5e1; font-size:16px;">${post.content}</p>
+                    <div class="post-stats">
+                        <div>💬 ${post.comment_count} yorum</div>
+                        <div>${createStarRating(post.id, 'post', post.rating_avg, post.rating_count)}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('post-modal').style.display = 'flex';
+            loadPostComments(postId);
+        });
+}
+
+function loadPostComments(postId) {
+    fetch(`/api/post-comments/${postId}`)
+        .then(r => r.json())
+        .then(data => {
+            let html = "";
+            data.forEach(c => {
+                const isOwner = currentUser && c.username === currentUser;
+                const deleteBtn = isOwner ? `<button onclick="deletePostComment(${c.id})" class="mini-btn delete-btn" style="margin-left: auto;" title="Sil">🗑️</button>` : '';
+                
+                html += `<div class="comment">
+                    <div class="comment-avatar">${c.avatar}</div>
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div style="display:flex; gap:10px; align-items:center; flex:1;">
+                                <b style="color:var(--primary);">@${c.username}</b>
+                                <span style="color:#64748b; font-size:11px;">${c.timestamp}</span>
+                            </div>
+                            ${deleteBtn}
+                        </div>
+                        <p style="margin:0; color:#cbd5e1; font-size:14px;">${c.content}</p>
+                        <div style="margin-top:8px;">${createStarRating(c.id, 'post-comment', c.rating_avg, c.rating_count)}</div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('post-comments-list').innerHTML = html || '<p style="text-align:center; color:#64748b;">Henüz yorum yok. İlk yorumu sen yap! 💬</p>';
+        })
+        .catch(err => console.error('Comments error:', err));
+}
+
+function submitPostComment() {
+    const content = document.getElementById('post-comment-input').value;
+    if(!content.trim()) {
+        alert('Lütfen bir yorum yazın!');
+        return;
+    }
+    fetch('/api/post-comment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({post_id: currentPostId, content: content})
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.error) alert(d.error);
+        else {
+            document.getElementById('post-comment-input').value = '';
+            loadPostComments(currentPostId);
+            fetchFeed();
+        }
+    })
+    .catch(err => alert('Yorum paylaşılamadı!'));
+}
+
+function closePostModal() {
+    document.getElementById('post-modal').style.display = 'none';
+}
+
+function openAsset(symbol, name) {
+    currentSymbol = symbol;
+    currentSymbolName = name;
+    document.getElementById('asset-modal').style.display = 'flex';
+    document.getElementById('modal-title').innerText = name + ' - Mum Grafiği';
+    loadCandlestickChart(symbol, 'daily');
+    loadComments(symbol);
+}
+
+function changePeriod(period) {
+    document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    loadCandlestickChart(currentSymbol, period);
+}
+
+function loadCandlestickChart(symbol, period) {
+    fetch(`/api/candlestick/${symbol}?period=${period}`)
+        .then(r => r.json())
+        .then(data => {
+            if(data.error) {
+                alert('Veri yüklenemedi');
+                return;
+            }
+            
+            const container = document.getElementById('candlestick-chart-container');
+            
+            // Mevcut grafiği temizle
+            if (lightweightChart) {
+                lightweightChart.remove();
+            }
+            
+            // Yeni grafik oluştur
+            lightweightChart = LightweightCharts.createChart(container, {
+                width: container.clientWidth,
+                height: 500,
+                layout: {
+                    background: { color: '#1c2128' },
+                    textColor: '#8b98a5',
+                },
+                grid: {
+                    vertLines: { color: '#30363d' },
+                    horzLines: { color: '#30363d' },
+                },
+                crosshair: {
+                    mode: LightweightCharts.CrosshairMode.Normal,
+                    vertLine: {
+                        color: '#3b82f6',
+                        width: 1,
+                        style: LightweightCharts.LineStyle.Solid,
+                        labelBackgroundColor: '#3b82f6',
+                    },
+                    horzLine: {
+                        color: '#3b82f6',
+                        width: 1,
+                        style: LightweightCharts.LineStyle.Solid,
+                        labelBackgroundColor: '#3b82f6',
+                    },
+                },
+                rightPriceScale: {
+                    borderColor: '#30363d',
+                    scaleMargins: {
+                        top: 0.05,
+                        bottom: 0.20,
+                    },
+                },
+                timeScale: {
+                    borderColor: '#30363d',
+                    timeVisible: true,
+                    secondsVisible: false,
+                    rightOffset: 12,
+                    barSpacing: 12,
+                    minBarSpacing: 8,
+                },
+                localization: {
+                    locale: 'tr-TR',
+                    priceFormatter: (price) => price.toFixed(2) + ' ₺',
+                },
+            });
+            
+            // Candlestick serisi ekle
+            candlestickSeries = lightweightChart.addCandlestickSeries({
+                upColor: '#10b981',
+                downColor: '#ef4444',
+                borderUpColor: '#10b981',
+                borderDownColor: '#ef4444',
+                wickUpColor: '#10b981',
+                wickDownColor: '#ef4444',
+            });
+            
+            // Veriyi formatla
+            const chartData = data.data.map(d => ({
+                time: d.time,
+                open: d.open,
+                high: d.high,
+                low: d.low,
+                close: d.close
+            }));
+            
+            candlestickSeries.setData(chartData);
+            
+            // Tooltip için legend oluştur
+            const toolTipDiv = document.createElement('div');
+            toolTipDiv.style.cssText = `
+                position: absolute;
+                display: none;
+                padding: 12px;
+                box-sizing: border-box;
+                font-size: 13px;
+                text-align: left;
+                z-index: 1000;
+                top: 12px;
+                left: 12px;
+                pointer-events: none;
+                background: rgba(28, 33, 40, 0.98);
+                border: 1px solid #30363d;
+                border-radius: 8px;
+                color: #e1e8ed;
+                font-family: 'Inter', sans-serif;
+            `;
+            container.appendChild(toolTipDiv);
+            
+            // Crosshair hareket event'i
+            lightweightChart.subscribeCrosshairMove(param => {
+                if (!param.time || !param.point || param.point.x < 0 || param.point.y < 0) {
+                    toolTipDiv.style.display = 'none';
+                    return;
+                }
+                
+                const data = param.seriesData.get(candlestickSeries);
+                if (data) {
+                    toolTipDiv.style.display = 'block';
+                    const price = data.close;
+                    const dateStr = new Date(param.time * 1000).toLocaleDateString('tr-TR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    toolTipDiv.innerHTML = `
+                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 6px;">${currentSymbolName}</div>
+                        <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">${dateStr}</div>
+                        <div style="display: grid; grid-template-columns: auto auto; gap: 8px 12px; font-size: 12px;">
+                            <span style="color: #94a3b8;">A:</span><span style="color: #00d4ff; font-weight: 600;">${data.open.toFixed(2)}</span>
+                            <span style="color: #94a3b8;">Y:</span><span style="color: #10b981; font-weight: 600;">${data.high.toFixed(2)}</span>
+                            <span style="color: #94a3b8;">D:</span><span style="color: #ef4444; font-weight: 600;">${data.low.toFixed(2)}</span>
+                            <span style="color: #94a3b8;">K:</span><span style="color: ${data.close >= data.open ? '#10b981' : '#ef4444'}; font-weight: 600;">${data.close.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Volume serisi ekle (opsiyonel)
+            if (showVolume && data.data[0].volume > 0) {
+                volumeSeries = lightweightChart.addHistogramSeries({
+                    color: 'rgba(0, 212, 255, 0.3)',
+                    priceFormat: {
+                        type: 'volume',
+                    },
+                    priceScaleId: '',
+                    scaleMargins: {
+                        top: 0.85,
+                        bottom: 0.01,
+                    },
+                });
+                
+                const volumeData = data.data.map(d => ({
+                    time: d.time,
+                    value: d.volume,
+                    color: d.close >= d.open ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'
+                }));
+                
+                volumeSeries.setData(volumeData);
+            } else {
+                volumeSeries = null;
+            }
+            
+            // Grafiği sığdır
+            lightweightChart.timeScale().fitContent();
+            
+            // Resize handler
+            const resizeObserver = new ResizeObserver(entries => {
+                if (lightweightChart && entries.length > 0) {
+                    const { width } = entries[0].contentRect;
+                    lightweightChart.applyOptions({ width });
+                }
+            });
+            resizeObserver.observe(container);
+        })
+        .catch(err => {
+            console.error('Grafik hatası:', err);
+            alert('Grafik yüklenemedi!');
+        });
+}
+
+function loadComments(symbol) {
+    fetch(`/api/asset-comments/${symbol}`)
+        .then(r => r.json())
+        .then(data => {
+            let html = "";
+            data.forEach(c => {
+                const isOwner = currentUser && c.username === currentUser;
+                const deleteBtn = isOwner ? `<button onclick="deleteAssetComment(${c.id})" class="mini-btn delete-btn" style="margin-left: auto;" title="Sil">🗑️</button>` : '';
+                
+                html += `<div class="comment">
+                    <div class="comment-avatar">${c.avatar}</div>
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div style="display:flex; gap:10px; align-items:center; flex:1;">
+                                <b style="color:var(--primary);">@${c.username}</b>
+                                <span style="color:#64748b; font-size:11px;">${c.timestamp}</span>
+                            </div>
+                            ${deleteBtn}
+                        </div>
+                        <p style="margin:0; color:#cbd5e1; font-size:14px;">${c.content}</p>
+                        <div style="margin-top:8px;">${createStarRating(c.id, 'asset-comment', c.rating_avg, c.rating_count)}</div>
+                    </div>
+                </div>`;
+            });
+            document.getElementById('comments-list').innerHTML = html || '<p style="text-align:center; color:#64748b;">Henüz yorum yok 💬</p>';
+        });
+}
+
+function submitComment() {
+    const content = document.getElementById('comment-input').value;
+    if(!content.trim()) {
+        alert('Lütfen bir yorum yazın!');
+        return;
+    }
+    fetch('/api/asset-comment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({symbol: currentSymbol, content: content})
+    })
+    .then(() => {
+        document.getElementById('comment-input').value = '';
+        loadComments(currentSymbol);
+    })
+    .catch(err => alert('Yorum paylaşılamadı!'));
+}
+
+function closeAssetModal() {
+    document.getElementById('asset-modal').style.display = 'none';
+    const modalBox = document.getElementById('chart-modal-box');
+    modalBox.classList.remove('fullscreen');
+    isFullscreen = false;
+}
+
+function openProfileEdit() {
+    document.getElementById('profile-edit-modal').style.display = 'flex';
+    document.getElementById('edit-bio').value = document.getElementById('profile-bio').innerText;
+    
+    // Reset image upload
+    uploadedProfileImage = null;
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('profile-image-input').value = '';
+    
+    // Mevcut avatarı seçili göster
+    const currentAvatar = document.getElementById('profile-avatar').innerText;
+    selectedAvatar = currentAvatar;
+    
+    // Mevcut profil fotoğrafını kontrol et
+    fetch(`/api/profile/${currentUser}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.profile_image) {
+                uploadedProfileImage = data.profile_image;
+                document.getElementById('preview-img').src = data.profile_image;
+                document.getElementById('image-preview').style.display = 'block';
+            }
+        });
+    
+    // Bir sonraki frame'de çalıştır (DOM yüklendikten sonra)
+    setTimeout(() => {
+        document.querySelectorAll('.avatar-option').forEach(opt => {
+            opt.classList.remove('selected');
+            if(opt.innerText === currentAvatar) {
+                opt.classList.add('selected');
+            }
+        });
+    }, 100);
+}
+
+function closeProfileEdit() {
+    document.getElementById('profile-edit-modal').style.display = 'none';
+}
+
+function selectAvatar(emoji) {
+    selectedAvatar = emoji;
+    // Tüm avatar seçeneklerinden selected class'ını kaldır
+    document.querySelectorAll('.avatar-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    // Tıklanan avatara selected class'ı ekle
+    event.target.classList.add('selected');
+}
+
+function saveProfile() {
+    const payload = {
+        bio: document.getElementById('edit-bio').value
+    };
+    
+    if (uploadedProfileImage) {
+        // Profil fotoğrafı yüklendiyse
+        payload.profile_image = uploadedProfileImage;
+        payload.avatar = ''; // Emoji avatarı temizle
+    } else if (selectedAvatar) {
+        // Emoji avatar seçildiyse
+        payload.avatar = selectedAvatar;
+        payload.remove_image = true; // Mevcut fotoğrafı kaldır
+    }
+    
+    fetch('/api/profile/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.error) {
+            alert(d.error);
+        } else {
+            closeProfileEdit();
+            loadProfile();
+            if (uploadedProfileImage) {
+                document.getElementById('user-avatar').innerHTML = `<img src="${uploadedProfileImage}" style="width:24px; height:24px; border-radius:50%; object-fit:cover;">`;
+            } else {
+                document.getElementById('user-avatar').innerText = selectedAvatar;
+            }
+        }
+    })
+    .catch(err => alert('Profil güncellenemedi!'));
+}
+
+function closeAuthModal() {
+    document.getElementById('auth-modal').style.display = 'none';
+}
+
+function openAuth(mode) {
+    document.getElementById('auth-modal').style.display = 'flex';
+    document.getElementById('reg-fields').style.display = mode === 'reg' ? 'block' : 'none';
+    document.getElementById('auth-title').innerText = mode === 'reg' ? '🎯 Yeni Hesap' : '🔐 Giriş Yap';
+    document.getElementById('af-btn').innerText = mode === 'reg' ? 'Kaydol' : 'Giriş Yap';
+    document.getElementById('af-btn').onclick = () => {
+        const payload = {
+            full_name: document.getElementById('af-fn').value,
+            username: document.getElementById('af-un').value,
+            password: document.getElementById('af-ps').value
+        };
+        fetch('/api/' + (mode === 'reg' ? 'register' : 'login'), {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(d => {
+            if(d.error) alert('❌ ' + d.error);
+            else location.reload();
+        })
+        .catch(err => alert('Bağlantı hatası!'));
+    };
+}
+
+function submitPost() {
+    const content = document.getElementById('post-input').value;
+    if(!content.trim()) {
+        alert('Lütfen bir içerik yazın!');
+        return;
+    }
+    fetch('/api/post', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({content: content})
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.error) alert(d.error);
+        else {
+            document.getElementById('post-input').value = '';
+            fetchFeed();
+        }
+    })
+    .catch(err => alert('Gönderi paylaşılamadı!'));
+}
+
+function deletePost(postId) {
+    if(!confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) return;
+    
+    fetch(`/api/post/${postId}`, {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.error) alert(d.error);
+        else {
+            fetchFeed();
+            loadProfile();
+        }
+    })
+    .catch(err => alert('Gönderi silinemedi!'));
+}
+
+function editPost(postId, currentContent) {
+    const newContent = prompt('Gönderiyi düzenle:', currentContent);
+    if(!newContent || !newContent.trim()) return;
+    
+    fetch(`/api/post/${postId}`, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({content: newContent})
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.error) alert(d.error);
+        else {
+            fetchFeed();
+            loadProfile();
+        }
+    })
+    .catch(err => alert('Gönderi düzenlenemedi!'));
+}
+
+function deletePostComment(commentId) {
+    if(!confirm('Bu yorumu silmek istediğinize emin misiniz?')) return;
+    
+    fetch(`/api/post-comment/${commentId}`, {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.error) alert(d.error);
+        else {
+            loadPostComments(currentPostId);
+            fetchFeed();
+        }
+    })
+    .catch(err => alert('Yorum silinemedi!'));
+}
+
+function deleteAssetComment(commentId) {
+    if(!confirm('Bu yorumu silmek istediğinize emin misiniz?')) return;
+    
+    fetch(`/api/asset-comment/${commentId}`, {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(r => r.json())
+    .then(d => {
+        if(d.error) alert(d.error);
+        else loadComments(currentSymbol);
+    })
+    .catch(err => alert('Yorum silinemedi!'));
+}
+
+fetch('/api/check-session')
+    .then(r => r.json())
+    .then(d => {
+        if(d.logged_in) {
+            currentUser = d.username;
+            document.getElementById('auth-ui').style.display = 'none';
+            document.getElementById('user-ui').style.display = 'block';
+            document.getElementById('nav-links').style.display = 'flex';
+            document.getElementById('post-box').style.display = 'block';
+            document.getElementById('comment-box').style.display = 'block';
+            document.getElementById('post-comment-box').style.display = 'block';
+            document.getElementById('user-name').innerText = '@' + d.username;
+            document.getElementById('user-avatar').innerText = d.avatar;
+        }
+    });
+
+fetchEconomicCalendar();
+fetchMarket();
+fetchFeed();
+setInterval(fetchEconomicCalendar, 3600000); // Her saatte bir güncelle
+setInterval(fetchMarket, 30000);
+setInterval(fetchFeed, 60000);
+
+// Klavye kısayolları
+document.addEventListener('keydown', (e) => {
+    // ESC tuşu - modal'ı kapat
+    if (e.key === 'Escape') {
+        const assetModal = document.getElementById('asset-modal');
+        const postModal = document.getElementById('post-modal');
+        if (assetModal.style.display === 'flex') {
+            closeAssetModal();
+        } else if (postModal.style.display === 'flex') {
+            closePostModal();
+        }
+    }
+    // F tuşu - fullscreen toggle (sadece grafik modalı açıkken)
+    if (e.key === 'f' || e.key === 'F') {
+        const assetModal = document.getElementById('asset-modal');
+        if (assetModal.style.display === 'flex') {
+            e.preventDefault();
+            toggleFullscreen();
+        }
+    }
+});
+</script>
+
 </body>
 </html>
