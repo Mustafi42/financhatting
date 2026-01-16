@@ -312,7 +312,67 @@ def login():
         if not data or not data.get('username') or not data.get('password'):
             return jsonify({'error': 'Kullanıcı adı ve şifre gerekli'}), 400
         
-        user = User.query.filter_by(username=data['username']).first()
+        user = User.query.get(session['user_id'])
+        user.total_comments = max(0, user.total_comments - 1)
+        
+        db.session.delete(comment)
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        logger.error(f"❌ Delete asset comment error: {e}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/rate-asset-comment', methods=['POST', 'OPTIONS'])
+def rate_asset_comment():
+    if request.method == 'OPTIONS':
+        return '', 204
+    if 'user_id' not in session:
+        return jsonify({'error': 'Giriş yapmalısınız'}), 401
+    
+    try:
+        data = request.json
+        comment = AssetComment.query.get(data['comment_id'])
+        rating = int(data['rating'])
+        
+        if not 1 <= rating <= 5:
+            return jsonify({'error': 'Geçersiz oy'}), 400
+        
+        comment.rating_sum += rating
+        comment.rating_count += 1
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'rating_avg': round(comment.rating_sum / comment.rating_count, 1),
+            'rating_count': comment.rating_count
+        })
+    except Exception as e:
+        logger.error(f"❌ Rate asset comment error: {e}")
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/<path:path>')
+def serve_static(path):
+    try:
+        return send_from_directory('.', path)
+    except:
+        return send_from_directory('.', 'index.html')
+
+@app.errorhandler(404)
+def not_found(e):
+    return send_from_directory('.', 'index.html')
+
+@app.errorhandler(500)
+def internal_error(e):
+    logger.error(f"❌ Internal error: {e}")
+    return jsonify({'error': 'Internal server error'}), 500
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    logger.info(f"🚀 Starting server on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=debug)filter_by(username=data['username']).first()
         
         if user and check_password_hash(user.password, data['password']):
             session.permanent = True
@@ -672,87 +732,3 @@ def delete_asset_comment(comment_id):
             return jsonify({'error': 'Yetkiniz yok'}), 403
         
         user = User.query.
-
-# --- VARLIK YORUM SİSTEMİ ---
-@app.route('/api/asset-comments/<symbol>')
-def get_asset_comments(symbol):
-    try:
-        comments = AssetComment.query.filter_by(asset_symbol=symbol).order_by(AssetComment.timestamp.desc()).limit(50).all()
-        return jsonify([{
-            'id': c.id,
-            'username': c.username,
-            'avatar': c.avatar,
-            'content': c.content,
-            'timestamp': c.timestamp.strftime('%Y-%m-%d %H:%M'),
-            'rating_avg': round(c.rating_sum / c.rating_count, 1) if (c.rating_count and c.rating_count > 0) else 0,
-            'rating_count': c.rating_count if c.rating_count else 0
-        } for c in comments])
-    except Exception as e:
-        print(f"❌ Yorum yükleme hatası: {e}")
-        return jsonify([])
-
-@app.route('/api/rate-asset-comment', methods=['POST', 'OPTIONS'])
-def rate_asset_comment():
-    if request.method == 'OPTIONS':
-        return '', 204
-        
-    if 'user_id' not in session:
-        return jsonify({'error': 'Giriş yapmalısınız'}), 401
-    
-    try:
-        data = request.json
-        comment = AssetComment.query.get(data['comment_id'])
-        rating = int(data['rating'])
-        
-        if rating < 1 or rating > 5:
-            return jsonify({'error': 'Geçersiz oy'}), 400
-        
-        comment.rating_sum += rating
-        comment.rating_count += 1
-        
-        db.session.commit()
-        
-        avg = round(comment.rating_sum / comment.rating_count, 1)
-        return jsonify({'success': True, 'rating_avg': avg, 'rating_count': comment.rating_count})
-    except Exception as e:
-        print(f"❌ Comment rating hatası: {e}")
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/asset-comment', methods=['POST', 'OPTIONS'])
-def add_asset_comment():
-    if request.method == 'OPTIONS':
-        return '', 204
-        
-    if 'user_id' not in session:
-        return jsonify({'error': 'Giriş yapmalısınız'}), 401
-    
-    try:
-        data = request.json
-        comment = AssetComment(
-            asset_symbol=data['symbol'],
-            content=data['content'],
-            user_id=session['user_id'],
-            username=session['username'],
-            avatar=session.get('avatar', '👤')
-        )
-        db.session.add(comment)
-        
-        user = User.query.get(session['user_id'])
-        user.total_comments += 1
-        
-        db.session.commit()
-        return jsonify({'success': True})
-    except Exception as e:
-        print(f"❌ Yorum ekleme hatası: {e}")
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
-
-if __name__ == '__main__':
-    print("🚀 Flask sunucusu başlatılıyor...")
-    print("📍 http://localhost:5000")
-    app.run(debug=True, port=5000, host='0.0.0.0')
