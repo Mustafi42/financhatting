@@ -37,7 +37,7 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
     bio = db.Column(db.String(500), default='')
     avatar = db.Column(db.String(10), default='👤')
-    profile_image = db.Column(db.Text, default=None)  # Base64 encoded image
+    profile_image = db.Column(db.Text, default=None)
     joined_date = db.Column(db.DateTime, default=datetime.now)
     total_posts = db.Column(db.Integer, default=0)
     total_comments = db.Column(db.Integer, default=0)
@@ -107,7 +107,6 @@ SYMBOL_MAP = {
 def get_economic_calendar():
     try:
         print("📅 Ekonomik takvim istendi...")
-        # Bu veriler gerçek API'lerden çekilebilir, şimdilik güncel tahminler
         calendar = {
             'fed_rate': {
                 'name': 'FED Faiz Oranı',
@@ -209,13 +208,13 @@ def get_candlestick(symbol):
         yahoo_symbol = SYMBOL_MAP.get(symbol, 'BTC-USD')
         
         if period_type == 'daily':
-            period = "1y"  # 1 yıl günlük
+            period = "1y"
             interval = "1d"
         elif period_type == 'weekly':
-            period = "3y"  # 3 yıl haftalık
+            period = "3y"
             interval = "1wk"
-        else:  # monthly
-            period = "5y"  # 5 yıl aylık
+        else:
+            period = "5y"
             interval = "1mo"
         
         ticker = yf.Ticker(yahoo_symbol)
@@ -385,7 +384,6 @@ def update_profile():
             user.avatar = data['avatar']
             session['avatar'] = data['avatar']
         if 'profile_image' in data:
-            # Base64 image data
             user.profile_image = data['profile_image']
         if 'remove_image' in data and data['remove_image']:
             user.profile_image = None
@@ -444,9 +442,7 @@ def delete_post(post_id):
         if post.user_id != session['user_id']:
             return jsonify({'error': 'Bu gönderiyi silme yetkiniz yok'}), 403
         
-        # İlgili yorumları da sil
         PostComment.query.filter_by(post_id=post_id).delete()
-        
         db.session.delete(post)
         
         user = User.query.get(session['user_id'])
@@ -598,11 +594,9 @@ def add_post_comment():
         )
         db.session.add(comment)
         
-        # Post yorum sayısını güncelle
         post = Post.query.get(data['post_id'])
         post.comment_count += 1
         
-        # Kullanıcı istatistiklerini güncelle
         user = User.query.get(session['user_id'])
         user.total_comments += 1
         
@@ -631,7 +625,6 @@ def delete_post_comment(comment_id):
             return jsonify({'error': 'Bu yorumu silme yetkiniz yok'}), 403
         
         post_id = comment.post_id
-        
         db.session.delete(comment)
         
         post = Post.query.get(post_id)
@@ -752,10 +745,23 @@ def add_asset_comment():
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    try:
+        return send_from_directory('.', 'index.html')
+    except Exception as e:
+        print(f"❌ Index.html yüklenemedi: {e}")
+        return jsonify({'error': 'Frontend yüklenemedi', 'details': str(e)}), 500
+
+@app.route('/<path:path>')
+def static_files(path):
+    try:
+        return send_from_directory('.', path)
+    except Exception as e:
+        return jsonify({'error': 'Dosya bulunamadı'}), 404
 
 if __name__ == '__main__':
     print("🚀 Flask sunucusu başlatılıyor...")
+    print(f"📂 Working directory: {os.getcwd()}")
+    print(f"📁 Files: {os.listdir('.')}")
     port = int(os.environ.get('PORT', 5000))
     print(f"📍 Port: {port}")
     app.run(debug=False, port=port, host='0.0.0.0')
