@@ -65,6 +65,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            cursor: pointer; /* Tıklanabilir yaptık */
         }
 
         .price-card::before {
@@ -115,6 +116,44 @@
         .price-unit {
             font-size: 0.85em;
             color: #64748b;
+        }
+
+        /* GRAFİK MODAL TASARIMI */
+        #chartModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: #1e293b;
+            width: 95%;
+            height: 90%;
+            margin: 2% auto;
+            border-radius: 15px;
+            position: relative;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 10001;
+            font-weight: bold;
         }
 
         .loading {
@@ -309,19 +348,28 @@
         </div>
     </div>
 
+    <div id="chartModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeChart()">Kapat X</button>
+            <div id="tv_chart_container" style="height: 100%;"></div>
+        </div>
+    </div>
+
     <button class="refresh-btn" onclick="loadAllData()" title="Verileri Yenile">
         ↻
     </button>
 
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+
     <script>
         const priceConfig = {
-            btc: { label: 'Bitcoin', icon: '₿', unit: 'USD', decimals: 2 },
-            gold: { label: 'Altın (Ons)', icon: '🥇', unit: 'USD', decimals: 2 },
-            silver: { label: 'Gümüş (Ons)', icon: '🥈', unit: 'USD', decimals: 2 },
-            copper: { label: 'Bakır (Ons)', icon: '🔶', unit: 'USD', decimals: 4 },
-            usd_try: { label: 'Dolar / TL', icon: '💵', unit: 'TRY', decimals: 4 },
-            eur_try: { label: 'Euro / TL', icon: '💶', unit: 'TRY', decimals: 4 },
-            bist100: { label: 'BIST 100', icon: '📈', unit: '', decimals: 2 }
+            btc: { label: 'Bitcoin', icon: '₿', unit: 'USD', decimals: 2, tv: "BINANCE:BTCUSDT" },
+            gold: { label: 'Altın (Ons)', icon: '🥇', unit: 'USD', decimals: 2, tv: "OANDA:XAUUSD" },
+            silver: { label: 'Gümüş (Ons)', icon: '🥈', unit: 'USD', decimals: 2, tv: "OANDA:XAGUSD" },
+            copper: { label: 'Bakır (Ons)', icon: '🔶', unit: 'USD', decimals: 4, tv: "COMEX:HG1!" },
+            usd_try: { label: 'Dolar / TL', icon: '💵', unit: 'TRY', decimals: 4, tv: "FX_IDC:USDTRY" },
+            eur_try: { label: 'Euro / TL', icon: '💶', unit: 'TRY', decimals: 4, tv: "FX_IDC:EURTRY" },
+            bist100: { label: 'BIST 100', icon: '📈', unit: '', decimals: 2, tv: "BIST:XU100" }
         };
 
         async function loadPrices() {
@@ -338,6 +386,8 @@
                     if (data[key] !== null && data[key] !== undefined) {
                         const card = document.createElement('div');
                         card.className = 'price-card';
+                        // Tıklama olayını ekledik
+                        card.onclick = () => openChart(config.tv);
                         card.innerHTML = `
                             <div class="price-label">
                                 <span class="price-icon">${config.icon}</span>
@@ -346,7 +396,7 @@
                             <div class="price-value">
                                 ${formatNumber(data[key], config.decimals)}
                             </div>
-                            <div class="price-unit">${config.unit}</div>
+                            <div class="price-unit">${config.unit} • <small style="color:#10b981">Grafik için tıkla</small></div>
                         `;
                         pricesGrid.appendChild(card);
                     }
@@ -364,6 +414,30 @@
                 console.error('Hata:', error);
                 showError('Fiyat verileri yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.');
             }
+        }
+
+        // Grafik Fonksiyonları
+        function openChart(symbol) {
+            document.getElementById('chartModal').style.display = 'block';
+            new TradingView.widget({
+                "autosize": true,
+                "symbol": symbol,
+                "interval": "D",
+                "timezone": "Europe/Istanbul",
+                "theme": "dark",
+                "style": "1",
+                "locale": "tr",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "tv_chart_container"
+            });
+        }
+
+        function closeChart() {
+            document.getElementById('chartModal').style.display = 'none';
+            document.getElementById('tv_chart_container').innerHTML = '';
         }
 
         async function loadCalendar() {
@@ -464,4 +538,3 @@
     </script>
 </body>
 </html>
-
