@@ -4,22 +4,14 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Sunucu çalıştığı sürece postları hafızada tutan gerçek liste
-# PostgreSQL bağladığımızda bunlar kalıcı olacak
-all_posts = [
-    {
-        "username": "mehmet",
-        "content": "Financhatting Sosyal terminali resmen açıldı! Buraya analizlerinizi yazabilirsiniz.",
-        "stars": 4.5,
-        "votes": 12,
-        "time": "1 sa. önce"
-    }
-]
+# Gerçek paylaşımlar buraya gelecek, şimdilik boş
+all_posts = []
 
 def get_financial_data():
     symbols = {
         'btc': 'BTC-USD', 'gold': 'GC=F', 'silver': 'SI=F',
-        'usd_try': 'USDTRY=X', 'eur_try': 'EURTRY=X', 'bist100': '^XU100'
+        'copper': 'HG=F', 'usd_try': 'USDTRY=X', 'eur_try': 'EURTRY=X',
+        'bist100': '^XU100'
     }
     prices = {}
     try:
@@ -30,6 +22,7 @@ def get_financial_data():
                 prices[key] = data['Close'].iloc[-1]
         
         if prices.get('gold') and prices.get('usd_try'):
+            # Orijinal Gram Altın TL Hesaplama Mantığı
             prices['gram_altin'] = (prices['gold'] / 31.1035) * prices['usd_try']
     except Exception as e:
         print(f"Hata: {e}")
@@ -46,9 +39,7 @@ def feed():
 
 @app.route('/kesfet')
 def kesfet():
-    # En çok oylananları üste çekmek için basit sıralama
-    trending = sorted(all_posts, key=lambda x: x['votes'], reverse=True)
-    return render_template('index.html', page="explore", posts=trending)
+    return render_template('index.html', page="explore", posts=all_posts)
 
 @app.route('/@<username>')
 def profile(username):
@@ -58,15 +49,13 @@ def profile(username):
 @app.route('/post', methods=['POST'])
 def create_post():
     content = request.form.get('content')
-    if content and len(content.strip()) > 0:
+    if content:
         new_post = {
-            "username": "mehmet", # Giriş sistemi gelene kadar senin adınla paylaşır
+            "username": "misafir", # Kayıt sistemiyle burası değişecek
             "content": content,
-            "stars": 0,
-            "votes": 0,
-            "time": "Şimdi"
+            "stars": 0, "votes": 0, "time": "Şimdi"
         }
-        all_posts.insert(0, new_post) # Yeni postu en başa ekle
+        all_posts.insert(0, new_post)
     return redirect(url_for('feed'))
 
 @app.route('/api/prices')
@@ -75,11 +64,13 @@ def prices():
 
 @app.route('/api/calendar')
 def calendar():
-    data = {
-        "fed_rate": {"current": 4.50},
-        "inflation": {"value": "44.2%"}
-    }
-    return jsonify(data)
+    # Orijinal geniş takvim verileri
+    return jsonify({
+        "fed_rate": {"current": 4.50, "next_meeting": "2026-01-28"},
+        "nonfarm_payroll": {"label": "Tarım Dışı İstihdam", "value": "215K", "previous": "190K", "date": "2026-02-06"},
+        "unemployment": {"label": "İşsizlik Oranı", "value": "3.9%", "previous": "4.0%", "date": "2026-02-06"},
+        "inflation": {"label": "TR Enflasyon (TÜFE)", "value": "44.2%", "previous": "45.1%", "date": "2026-02-03"}
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)
