@@ -199,8 +199,7 @@ def _last_close_non_empty(ticker: yf.Ticker, periods=("1d", "5d")):
             return float(data["Close"].iloc[-1])
     return None
 
-def get_financial_data():
-    def _fetch_prices_once():
+def _fetch_prices_once():
     symbols = {
         'btc': 'BTC-USD',
         'gold': 'GC=F',
@@ -212,23 +211,32 @@ def get_financial_data():
     }
 
     prices = {}
+
     for key, symbol in symbols.items():
         try:
             t = yf.Ticker(symbol)
 
-            # 1d boş dönme ihtimaline karşı 5d fallback + son dolu close
+            # 5d fallback + son dolu close
             data = t.history(period="5d", interval="1d")
+
             if data is not None and not data.empty:
-                # son geçerli close
                 close = data["Close"].dropna()
                 prices[key] = float(close.iloc[-1]) if not close.empty else None
             else:
                 prices[key] = None
 
         except Exception as e:
-            # tek sembol patlarsa tüm endpoint patlamasın
             print(f"Ticker hata {symbol}: {e}")
             prices[key] = None
+
+    # Gram Altın TL
+    if prices.get('gold') and prices.get('usd_try'):
+        prices['gram_altin'] = (prices['gold'] / 31.1035) * prices['usd_try']
+    else:
+        prices['gram_altin'] = None
+
+    prices['timestamp'] = datetime.now().isoformat()
+    return prices
 
     # Gram Altın TL
     if prices.get('gold') and prices.get('usd_try'):
