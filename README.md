@@ -27,3 +27,4 @@ financhatting/
 ├── railway.json
 └── runtime.txt
 ## ⚙️ Environment Variables
+ALPHA_VANTAGE_KEY=YLJHVUGL27NP73T0
