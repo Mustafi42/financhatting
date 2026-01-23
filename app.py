@@ -18,7 +18,13 @@ from authlib.integrations.flask_client import OAuth
 # ----------------------------
 app = Flask(__name__, template_folder="templates")
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+import threading
+import time
 
+CACHE_TTL_SECONDS = 25  # frontend 30sn'de bir çağırıyor, 25 iyi
+_last_good = {"data": None, "ts": 0.0}
+_lock = threading.Lock()
+_refreshing = False
 # DATABASE_URL (Railway)
 db_url = os.environ.get("DATABASE_URL")
 if db_url and db_url.startswith("postgres://"):
@@ -194,50 +200,93 @@ def _last_close_non_empty(ticker: yf.Ticker, periods=("1d", "5d")):
     return None
 
 def get_financial_data():
-    global _price_cache
-    ts = _price_cache["ts"]
-    if ts and (now_utc() - ts).total_seconds() < 20 and _price_cache["data"]:
-        return _price_cache["data"]
+    def _fetch_prices_once():
+    symbols = {
+        'btc': 'BTC-USD',
+        'gold': 'GC=F',
+        'silver': 'SI=F',
+        'copper': 'HG=F',
+        'usd_try': 'USDTRY=X',
+        'eur_try': 'EURTRY=X',
+        'bist100': '^XU100'
+    }
 
     prices = {}
-    try:
-        for key, symbol in PRICE_SYMBOLS.items():
-            ticker = yf.Ticker(symbol)
-            prices[key] = _last_close_non_empty(ticker)
+    for key, symbol in symbols.items():
+        try:
+            t = yf.Ticker(symbol)
 
-        # Gram Altın TL (Ons / 31.1035 * USDTRY)
-        if prices.get("gold") and prices.get("usd_try"):
-            prices["gram_altin"] = (prices["gold"] / 31.1035) * prices["usd_try"]
-        else:
-            prices["gram_altin"] = None
+            # 1d boş dönme ihtimaline karşı 5d fallback + son dolu close
+            data = t.history(period="5d", interval="1d")
+            if data is not None and not data.empty:
+                # son geçerli close
+                close = data["Close"].dropna()
+                prices[key] = float(close.iloc[-1]) if not close.empty else None
+            else:
+                prices[key] = None
 
-    except Exception as e:
-        print(f"Veri çekme hatası: {e}")
+        except Exception as e:
+            # tek sembol patlarsa tüm endpoint patlamasın
+            print(f"Ticker hata {symbol}: {e}")
+            prices[key] = None
 
-    prices["timestamp"] = datetime.now().isoformat()
+    # Gram Altın TL
+    if prices.get('gold') and prices.get('usd_try'):
+        prices['gram_altin'] = (prices['gold'] / 31.1035) * prices['usd_try']
+    else:
+        prices['gram_altin'] = None
 
-    _price_cache = {"ts": now_utc(), "data": prices}
+    prices['timestamp'] = datetime.now().isoformat()
     return prices
 
-def compute_change_pct(symbol: str) -> float | None:
-    """1d değişim yüzdesi için son 2-5 gün kapanışlarını karşılaştır."""
-    try:
-        t = yf.Ticker(symbol)
-        data = t.history(period="5d")
-        if data is None or data.empty or len(data["Close"]) < 2:
-            return None
-        closes = data["Close"].dropna()
-        if len(closes) < 2:
-            return None
-        last = float(closes.iloc[-1])
-        prev = float(closes.iloc[-2])
-        if prev == 0:
-            return None
-        return ((last - prev) / prev) * 100.0
-    except Exception as e:
-        print("change_pct error:", e)
-        return None
 
+def _refresh_cache_background():
+    global _refreshing
+    try:
+        data = _fetch_prices_once()
+        # En azından 1-2 kritik veri geldiyse cache'e yaz (tamamen boşsa eskiyi koru)
+        got_any = any(data.get(k) is not None for k in ["btc", "gold", "usd_try", "eur_try"])
+        if got_any:
+            with _lock:
+                _last_good["data"] = data
+                _last_good["ts"] = time.time()
+    finally:
+        _refreshing = False
+
+
+def get_financial_data():
+    """
+    Hızlı döner:
+    - cache tazeyse cache
+    - değilse cache'i döner, arkada refresh başlatır
+    - cache hiç yoksa ilk sefer senkron fetch (çok kısa da olsa) dener
+    """
+    global _refreshing
+
+    now = time.time()
+    with _lock:
+        cached = _last_good["data"]
+        age = now - _last_good["ts"]
+
+    if cached and age < CACHE_TTL_SECONDS:
+        return cached
+
+    # Cache var ama bayat -> kullanıcı beklemesin, arkada yenile
+    if cached:
+        if not _refreshing:
+            _refreshing = True
+            threading.Thread(target=_refresh_cache_background, daemon=True).start()
+        return cached
+
+    # Cache yoksa: ilk kez geldi -> bir kere senkron dene
+    data = _fetch_prices_once()
+    got_any = any(data.get(k) is not None for k in ["btc", "gold", "usd_try", "eur_try"])
+    if got_any:
+        with _lock:
+            _last_good["data"] = data
+            _last_good["ts"] = time.time()
+    return data
+    
 def maybe_create_price_alerts():
     """%20+ değişim varsa feed'e alert düşür (günde 1 defa / sembol)."""
     # son 24 saat içinde aynı sembol alert var mı?
