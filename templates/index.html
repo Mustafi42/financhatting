@@ -368,7 +368,8 @@
             copper: { label: 'Bakır (Ons)', icon: '🔶', unit: 'USD', decimals: 4, tv: "CAPITALCOM:COPPER" },
             usd_try: { label: 'Dolar / TL', icon: '💵', unit: 'TRY', decimals: 4, tv: "FX:USDTRY" },
             eur_try: { label: 'Euro / TL', icon: '💶', unit: 'TRY', decimals: 4, tv: "FX:EURTRY" },
-            bist100: { label: 'BIST 100', icon: '📈', unit: '', decimals: 2, tv: "INDEX:XU100" }
+            // BIST 100 İçin En Garanti TVC Verisi
+            bist100: { label: 'BIST 100', icon: '📈', unit: '', decimals: 2, tv: "TVC:XU100" }
         };
 
         async function loadPrices() {
@@ -418,7 +419,7 @@
             new TradingView.widget({
                 "autosize": true,
                 "symbol": symbol,
-                "interval": "D",
+                "interval": "60", // Kısa vade (1 saatlik mumlar)
                 "timezone": "Europe/Istanbul",
                 "theme": "dark",
                 "style": "1",
@@ -430,7 +431,7 @@
                 "container_id": "tv_chart_container",
                 "studies": [
                     "Volume@tv-basicstudies",
-                    "PivotPointsStandard@tv-basicstudies"
+                    "PivotPointsHighLow@tv-basicstudies" // Sadece tepe ve dip noktaları (Göz yormaz)
                 ]
             });
         }
