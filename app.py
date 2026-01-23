@@ -272,14 +272,38 @@ def get_financial_data():
         "timestamp": datetime.now().isoformat(),
     }
 
-    # cache yok -> 1 kere senkron dene
-    data = _fetch_prices_once()
-    got_any = any(data.get(k) is not None for k in ["btc", "gold", "usd_try", "eur_try"])
-    if got_any:
-        with _lock:
-            _last_good["data"] = data
-            _last_good["ts"] = time.time()
-    return data
+    def get_financial_data():
+    global _refreshing
+
+    now = time.time()
+    with _lock:
+        cached = _last_good["data"]
+        age = now - _last_good["ts"]
+
+    if cached and age < CACHE_TTL_SECONDS:
+        return cached
+
+    if cached:
+        if not _refreshing:
+            _refreshing = True
+            threading.Thread(target=_refresh_cache_background, daemon=True).start()
+        return cached
+
+    if not _refreshing:
+        _refreshing = True
+        threading.Thread(target=_refresh_cache_background, daemon=True).start()
+
+    return {
+        "btc": None,
+        "gold": None,
+        "silver": None,
+        "copper": None,
+        "usd_try": None,
+        "eur_try": None,
+        "bist100": None,
+        "gram_altin": None,
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 def compute_change_pct(yahoo_symbol: str):
