@@ -65,7 +65,6 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            cursor: pointer;
         }
 
         .price-card::before {
@@ -118,6 +117,7 @@
             color: #64748b;
         }
 
+        /* GRAFİK MODAL STİLİ */
         #chartModal {
             display: none;
             position: fixed;
@@ -321,7 +321,7 @@
     <div class="container">
         <header>
             <h1>📊 Finans Takip Platformu</h1>
-            <p>Gerçek Zamanlı Piyasa Verileri ve Teknik Analiz</p>
+            <p>Gerçek Zamanlı Piyasa Verileri ve Ekonomik Takvim</p>
         </header>
 
         <div class="last-update" id="lastUpdate">
@@ -362,14 +362,13 @@
 
     <script>
         const priceConfig = {
-            btc: { label: 'Bitcoin', icon: '₿', unit: 'USD', decimals: 2, tv: "BINANCE:BTCUSDT" },
-            gold: { label: 'Altın (Ons)', icon: '🥇', unit: 'USD', decimals: 2, tv: "TVC:GOLD" },
-            silver: { label: 'Gümüş (Ons)', icon: '🥈', unit: 'USD', decimals: 2, tv: "TVC:SILVER" },
-            copper: { label: 'Bakır (Ons)', icon: '🔶', unit: 'USD', decimals: 4, tv: "CAPITALCOM:COPPER" },
-            usd_try: { label: 'Dolar / TL', icon: '💵', unit: 'TRY', decimals: 4, tv: "FX:USDTRY" },
-            eur_try: { label: 'Euro / TL', icon: '💶', unit: 'TRY', decimals: 4, tv: "FX:EURTRY" },
-            // BIST 100 İçin En Garanti TVC Verisi
-            bist100: { label: 'BIST 100', icon: '📈', unit: '', decimals: 2, tv: "TVC:XU100" }
+            gram_altin: { label: 'Gram Altın', icon: '✨', unit: 'TRY', decimals: 2, hasChart: false },
+            btc: { label: 'Bitcoin', icon: '₿', unit: 'USD', decimals: 2, tv: "BINANCE:BTCUSDT", hasChart: true },
+            gold: { label: 'Altın (Ons)', icon: '🥇', unit: 'USD', decimals: 2, tv: "TVC:GOLD", hasChart: true },
+            silver: { label: 'Gümüş (Ons)', icon: '🥈', unit: 'USD', decimals: 2, tv: "TVC:SILVER", hasChart: true },
+            usd_try: { label: 'Dolar / TL', icon: '💵', unit: 'TRY', decimals: 4, tv: "FX:USDTRY", hasChart: true },
+            eur_try: { label: 'Euro / TL', icon: '💶', unit: 'TRY', decimals: 4, tv: "FX:EURTRY", hasChart: true },
+            bist100: { label: 'BIST 100', icon: '📈', unit: 'TRY', decimals: 2, hasChart: false }
         };
 
         async function loadPrices() {
@@ -385,7 +384,12 @@
                     if (data[key] !== null && data[key] !== undefined) {
                         const card = document.createElement('div');
                         card.className = 'price-card';
-                        card.onclick = () => openChart(config.tv);
+                        
+                        if (config.hasChart) {
+                            card.style.cursor = 'pointer';
+                            card.onclick = () => openChart(config.tv);
+                        }
+                        
                         card.innerHTML = `
                             <div class="price-label">
                                 <span class="price-icon">${config.icon}</span>
@@ -394,7 +398,7 @@
                             <div class="price-value">
                                 ${formatNumber(data[key], config.decimals)}
                             </div>
-                            <div class="price-unit">${config.unit} • <small style="color:#10b981">Analiz İçin Tıkla</small></div>
+                            <div class="price-unit">${config.unit} ${config.hasChart ? '• <small style="color:#10b981">Analiz İçin Tıkla</small>' : ''}</div>
                         `;
                         pricesGrid.appendChild(card);
                     }
@@ -419,7 +423,7 @@
             new TradingView.widget({
                 "autosize": true,
                 "symbol": symbol,
-                "interval": "60", // Kısa vade (1 saatlik mumlar)
+                "interval": "60",
                 "timezone": "Europe/Istanbul",
                 "theme": "dark",
                 "style": "1",
@@ -431,7 +435,7 @@
                 "container_id": "tv_chart_container",
                 "studies": [
                     "Volume@tv-basicstudies",
-                    "PivotPointsHighLow@tv-basicstudies" // Sadece tepe ve dip noktaları (Göz yormaz)
+                    "PivotPointsHighLow@tv-basicstudies"
                 ]
             });
         }
@@ -451,15 +455,15 @@
                 calendarGrid.innerHTML = '';
 
                 const fedCard = createCalendarCard(
-                    'FED Faiz Oranı',
+                    '🇺🇸 FED Faiz Oranı',
                     `${data.fed_rate.current}%`,
-                    `Sonraki Toplantı: ${formatDate(data.fed_rate.next_meeting)}`,
+                    `Sonraki: ${formatDate(data.fed_rate.next_meeting)}`,
                     'blue'
                 );
                 calendarGrid.appendChild(fedCard);
 
                 const nfpCard = createCalendarCard(
-                    data.nonfarm_payroll.label,
+                    `🇺🇸 ${data.nonfarm_payroll.label}`,
                     data.nonfarm_payroll.value,
                     `Önceki: ${data.nonfarm_payroll.previous}`,
                     'green',
@@ -468,20 +472,20 @@
                 calendarGrid.appendChild(nfpCard);
 
                 const unemploymentCard = createCalendarCard(
-                    data.unemployment.label,
+                    `🇺🇸 ${data.unemployment.label}`,
                     data.unemployment.value,
                     `Önceki: ${data.unemployment.previous}`,
-                    data.unemployment.value < data.unemployment.previous ? 'green' : 'red',
+                    'red',
                     formatDate(data.unemployment.date)
                 );
                 calendarGrid.appendChild(unemploymentCard);
 
                 const inflationCard = createCalendarCard(
-                    data.inflation.label,
+                    `🇹🇷 ${data.inflation.label}`,
                     data.inflation.value,
                     `Önceki: ${data.inflation.previous}`,
-                    data.inflation.value < data.inflation.previous ? 'green' : 'red',
-                    formatDate(data.inflation.date)
+                    'badge-red',
+                    'Güncel Veri'
                 );
                 calendarGrid.appendChild(inflationCard);
 
