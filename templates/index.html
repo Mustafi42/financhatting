@@ -65,7 +65,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            cursor: pointer; /* Tıklanabilir yaptık */
+            cursor: pointer;
         }
 
         .price-card::before {
@@ -118,7 +118,7 @@
             color: #64748b;
         }
 
-        /* GRAFİK MODAL TASARIMI */
+        /* GRAFİK MODAL STİLİ */
         #chartModal {
             display: none;
             position: fixed;
@@ -127,7 +127,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
+            z-index: 10000;
             backdrop-filter: blur(5px);
         }
 
@@ -322,7 +322,7 @@
     <div class="container">
         <header>
             <h1>📊 Finans Takip Platformu</h1>
-            <p>Gerçek Zamanlı Piyasa Verileri ve Ekonomik Takvim</p>
+            <p>Gerçek Zamanlı Piyasa Verileri ve Teknik Analiz</p>
         </header>
 
         <div class="last-update" id="lastUpdate">
@@ -364,12 +364,12 @@
     <script>
         const priceConfig = {
             btc: { label: 'Bitcoin', icon: '₿', unit: 'USD', decimals: 2, tv: "BINANCE:BTCUSDT" },
-            gold: { label: 'Altın (Ons)', icon: '🥇', unit: 'USD', decimals: 2, tv: "OANDA:XAUUSD" },
-            silver: { label: 'Gümüş (Ons)', icon: '🥈', unit: 'USD', decimals: 2, tv: "OANDA:XAGUSD" },
-            copper: { label: 'Bakır (Ons)', icon: '🔶', unit: 'USD', decimals: 4, tv: "COMEX:HG1!" },
-            usd_try: { label: 'Dolar / TL', icon: '💵', unit: 'TRY', decimals: 4, tv: "FX_IDC:USDTRY" },
-            eur_try: { label: 'Euro / TL', icon: '💶', unit: 'TRY', decimals: 4, tv: "FX_IDC:EURTRY" },
-            bist100: { label: 'BIST 100', icon: '📈', unit: '', decimals: 2, tv: "BIST:XU100" }
+            gold: { label: 'Altın (Ons)', icon: '🥇', unit: 'USD', decimals: 2, tv: "TVC:GOLD" },
+            silver: { label: 'Gümüş (Ons)', icon: '🥈', unit: 'USD', decimals: 2, tv: "TVC:SILVER" },
+            copper: { label: 'Bakır (Ons)', icon: '🔶', unit: 'USD', decimals: 4, tv: "CAPITALCOM:COPPER" },
+            usd_try: { label: 'Dolar / TL', icon: '💵', unit: 'TRY', decimals: 4, tv: "FX:USDTRY" },
+            eur_try: { label: 'Euro / TL', icon: '💶', unit: 'TRY', decimals: 4, tv: "FX:EURTRY" },
+            bist100: { label: 'BIST 100', icon: '📈', unit: '', decimals: 2, tv: "TVC:XU100" }
         };
 
         async function loadPrices() {
@@ -378,7 +378,6 @@
                 if (!response.ok) throw new Error('Fiyatlar yüklenemedi');
                 
                 const data = await response.json();
-                
                 const pricesGrid = document.getElementById('pricesGrid');
                 pricesGrid.innerHTML = '';
 
@@ -386,7 +385,6 @@
                     if (data[key] !== null && data[key] !== undefined) {
                         const card = document.createElement('div');
                         card.className = 'price-card';
-                        // Tıklama olayını ekledik
                         card.onclick = () => openChart(config.tv);
                         card.innerHTML = `
                             <div class="price-label">
@@ -396,7 +394,7 @@
                             <div class="price-value">
                                 ${formatNumber(data[key], config.decimals)}
                             </div>
-                            <div class="price-unit">${config.unit} • <small style="color:#10b981">Grafik için tıkla</small></div>
+                            <div class="price-unit">${config.unit} • <small style="color:#10b981">Analiz İçin Tıkla</small></div>
                         `;
                         pricesGrid.appendChild(card);
                     }
@@ -412,11 +410,10 @@
 
             } catch (error) {
                 console.error('Hata:', error);
-                showError('Fiyat verileri yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.');
+                showError('Fiyat verileri yüklenirken bir hata oluştu.');
             }
         }
 
-        // Grafik Fonksiyonları
         function openChart(symbol) {
             document.getElementById('chartModal').style.display = 'block';
             new TradingView.widget({
@@ -431,7 +428,10 @@
                 "enable_publishing": false,
                 "hide_side_toolbar": false,
                 "allow_symbol_change": true,
-                "container_id": "tv_chart_container"
+                "container_id": "tv_chart_container",
+                "studies": [
+                    "PivotPointsHighLow@tv-basicstudies"
+                ]
             });
         }
 
