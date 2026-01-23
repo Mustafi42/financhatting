@@ -7,7 +7,8 @@ from flask_cors import CORS
 app = Flask(**name**)
 CORS(app)
 
-ALPHA_VANTAGE_KEY = os.getenv(‘ALPHA_VANTAGE_KEY’, ‘YLJHVUGL27NP73T0’)
+ALPHA_VANTAGE_KEY = os.getenv('ALPHA_VANTAGE_KEY', 'YLJHVUGL27NP73T0')
+
 
 def get_crypto_price(symbol):
 try:
