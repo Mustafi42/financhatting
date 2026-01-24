@@ -33,7 +33,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 # DATABASE_URL (Railway)
 db_url = os.environ.get("DATABASE_URL")
 if db_url and db_url.startswith("postgres://"):
-    # Heroku/Railway bazen postgres:// verir, SQLAlchemy postgresql:// bekler
+    # Railway/Heroku bazen postgres:// verir, SQLAlchemy postgresql:// bekler
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///local.db"
@@ -73,35 +73,61 @@ class User(db.Model):
     avatar_type = db.Column(db.String(16), nullable=False, default="ui")  # ui | preset | upload
     avatar_url = db.Column(db.Text, nullable=True)
 
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
 
 class Follow(db.Model):
     __tablename__ = "follows"
     id = db.Column(db.BigInteger, primary_key=True)
-    follower_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    following_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    follower_id = db.Column(
+        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    following_id = db.Column(
+        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
     __table_args__ = (db.UniqueConstraint("follower_id", "following_id", name="uq_follow_pair"),)
 
 
 class Post(db.Model):
     __tablename__ = "posts"
     id = db.Column(db.BigInteger, primary_key=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(
+        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     content = db.Column(db.Text, nullable=False)
     symbol_key = db.Column(db.String(16), nullable=True, index=True)  # opsiyonel (btc, gold vs.)
     image_url = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
 
 class PostRating(db.Model):
     __tablename__ = "post_ratings"
     id = db.Column(db.BigInteger, primary_key=True)
-    post_id = db.Column(db.BigInteger, db.ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    post_id = db.Column(
+        db.BigInteger, db.ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id = db.Column(
+        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     stars = db.Column(db.SmallInteger, nullable=False)  # 1..5
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
     __table_args__ = (db.UniqueConstraint("post_id", "user_id", name="uq_post_rating_once"),)
 
 
@@ -109,18 +135,32 @@ class SymbolComment(db.Model):
     __tablename__ = "symbol_comments"
     id = db.Column(db.BigInteger, primary_key=True)
     symbol_key = db.Column(db.String(16), nullable=False, index=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(
+        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
 
 class CommentRating(db.Model):
     __tablename__ = "comment_ratings"
     id = db.Column(db.BigInteger, primary_key=True)
-    comment_id = db.Column(db.BigInteger, db.ForeignKey("symbol_comments.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    stars = db.Column(db.SmallInteger, nullable=False)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    comment_id = db.Column(
+        db.BigInteger, db.ForeignKey("symbol_comments.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    user_id = db.Column(
+        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    stars = db.Column(db.SmallInteger, nullable=False)  # 1..5
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
     __table_args__ = (db.UniqueConstraint("comment_id", "user_id", name="uq_comment_rating_once"),)
 
 
@@ -131,7 +171,11 @@ class PriceAlert(db.Model):
     change_pct = db.Column(db.Float, nullable=False)
     window = db.Column(db.String(8), nullable=False, default="1d")
     last_price = db.Column(db.Float, nullable=True)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
 
 class FeedEvent(db.Model):
@@ -140,7 +184,11 @@ class FeedEvent(db.Model):
     type = db.Column(db.String(16), nullable=False)  # post | alert
     ref_id = db.Column(db.BigInteger, nullable=False, index=True)
     score = db.Column(db.Float, nullable=False, default=0.0)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    created_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
 
 
 # ----------------------------
@@ -176,7 +224,7 @@ def username_is_valid(u: str) -> bool:
 
 
 # ----------------------------
-# Finance Data + Cache
+# Finance Data + Non-blocking Cache
 # ----------------------------
 PRICE_SYMBOLS = {
     "btc": "BTC-USD",
@@ -200,7 +248,6 @@ def _fetch_prices_once():
     for key, symbol in PRICE_SYMBOLS.items():
         try:
             t = yf.Ticker(symbol)
-            # 5d + günlük close -> son dolu close
             data = t.history(period="5d", interval="1d")
             if data is not None and not data.empty:
                 close = data["Close"].dropna()
@@ -247,56 +294,6 @@ def get_financial_data():
     with _lock:
         cached = _last_good["data"]
         age = now_ts - _last_good["ts"]
-
-    # Cache tazeyse direkt dön
-    if cached and age < CACHE_TTL_SECONDS:
-        return cached
-
-    # Cache bayatsa: bekletme, arkada yenile
-    if cached:
-        if not _refreshing:
-            _refreshing = True
-            threading.Thread(target=_refresh_cache_background, daemon=True).start()
-        return cached
-
-    # Cache yoksa: yine bekletme -> placeholder dön, arkada yenile
-    if not _refreshing:
-        _refreshing = True
-        threading.Thread(target=_refresh_cache_background, daemon=True).start()
-
-    # Frontend null görür, UI kırılmaz
-    return {
-        "btc": None,
-        "gold": None,
-        "silver": None,
-        "copper": None,
-        "usd_try": None,
-        "eur_try": None,
-        "bist100": None,
-        "gram_altin": None,
-        "timestamp": datetime.now().isoformat(),
-    }
-
-    # Frontend sadece null görür, UI kırılmaz (zaten null kontrolün vardı)
-    return {
-        "btc": None,
-        "gold": None,
-        "silver": None,
-        "copper": None,
-        "usd_try": None,
-        "eur_try": None,
-        "bist100": None,
-        "gram_altin": None,
-        "timestamp": datetime.now().isoformat(),
-    }
-
-    def get_financial_data():
-    global _refreshing
-
-    now = time.time()
-    with _lock:
-        cached = _last_good["data"]
-        age = now - _last_good["ts"]
 
     if cached and age < CACHE_TTL_SECONDS:
         return cached
@@ -545,6 +542,7 @@ def settings():
     return render_template("settings.html", user=u)
 
 
+# Twitter tarzı profil: /@username
 @app.route("/@<username>")
 def profile(username):
     username = username.lower()
@@ -663,7 +661,7 @@ def register():
 def login():
     if request.method == "POST":
         username = (request.form.get("username") or "").strip().lower()
-        password = request.form.get("password") or ""
+        password = (request.form.get("password") or "").strip()
 
         u = db.session.query(User).filter_by(username=username).first()
         if not u or not u.password_hash or not check_password_hash(u.password_hash, password):
@@ -737,6 +735,7 @@ def create_post():
     lr = login_required()
     if lr:
         return lr
+
     u = current_user()
     content = (request.form.get("content") or "").strip()
     symbol_key = (request.form.get("symbol_key") or "").strip().lower() or None
@@ -767,6 +766,7 @@ def rate_post(post_id):
     lr = login_required()
     if lr:
         return lr
+
     u = current_user()
     stars = int(request.form.get("stars") or "0")
     if stars < 1 or stars > 5:
@@ -784,8 +784,7 @@ def rate_post(post_id):
     if r:
         r.stars = stars
     else:
-        r = PostRating(post_id=post_id, user_id=u.id, stars=stars)
-        db.session.add(r)
+        db.session.add(PostRating(post_id=post_id, user_id=u.id, stars=stars))
 
     avg, cnt = post_rating_summary(post_id)
     fe = db.session.query(FeedEvent).filter(FeedEvent.type == "post", FeedEvent.ref_id == post_id).first()
@@ -801,6 +800,7 @@ def add_symbol_comment(symbol_key):
     lr = login_required()
     if lr:
         return lr
+
     symbol_key = symbol_key.lower()
     if symbol_key not in PRICE_SYMBOLS:
         abort(404)
@@ -822,6 +822,7 @@ def rate_comment(comment_id):
     lr = login_required()
     if lr:
         return lr
+
     u = current_user()
     stars = int(request.form.get("stars") or "0")
     if stars < 1 or stars > 5:
@@ -839,8 +840,7 @@ def rate_comment(comment_id):
     if r:
         r.stars = stars
     else:
-        r = CommentRating(comment_id=comment_id, user_id=u.id, stars=stars)
-        db.session.add(r)
+        db.session.add(CommentRating(comment_id=comment_id, user_id=u.id, stars=stars))
 
     db.session.commit()
     return redirect(request.referrer or url_for("symbol_page", symbol_key=c.symbol_key))
@@ -851,6 +851,7 @@ def follow_user(username):
     lr = login_required()
     if lr:
         return lr
+
     me = current_user()
     username = username.lower()
     target = db.session.query(User).filter_by(username=username).first()
@@ -872,7 +873,7 @@ def follow_user(username):
 
 
 # ----------------------------
-# Routes: Existing APIs (prices/calendar)
+# Routes: APIs
 # ----------------------------
 @app.route("/api/prices")
 def prices_api():
@@ -881,11 +882,27 @@ def prices_api():
 
 @app.route("/api/calendar")
 def calendar_api():
+    # şimdilik hardcoded
     data = {
         "fed_rate": {"current": 4.50, "next_meeting": "2026-01-28"},
-        "nonfarm_payroll": {"label": "Tarım Dışı İstihdam", "value": "215K", "previous": "190K", "date": "2026-02-06"},
-        "unemployment": {"label": "İşsizlik Oranı", "value": "3.9%", "previous": "4.0%", "date": "2026-02-06"},
-        "inflation": {"label": "TR Enflasyon (TÜFE)", "value": "44.2%", "previous": "45.1%", "date": "2026-02-03"},
+        "nonfarm_payroll": {
+            "label": "Tarım Dışı İstihdam",
+            "value": "215K",
+            "previous": "190K",
+            "date": "2026-02-06",
+        },
+        "unemployment": {
+            "label": "İşsizlik Oranı",
+            "value": "3.9%",
+            "previous": "4.0%",
+            "date": "2026-02-06",
+        },
+        "inflation": {
+            "label": "TR Enflasyon (TÜFE)",
+            "value": "44.2%",
+            "previous": "45.1%",
+            "date": "2026-02-03",
+        },
     }
     return jsonify(data)
 
