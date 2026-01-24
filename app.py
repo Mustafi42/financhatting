@@ -235,13 +235,18 @@ def _refresh_cache_background():
 
 
 def get_financial_data():
- 
+    """
+    ASLA BLOKLAMAZ.
+    - Cache tazeyse cache döner
+    - Cache bayatsa cache döner, arkada yeniler
+    - Cache yoksa placeholder döner, arkada yeniler
+    """
     global _refreshing
 
-    now = time.time()
+    now_ts = time.time()
     with _lock:
         cached = _last_good["data"]
-        age = now - _last_good["ts"]
+        age = now_ts - _last_good["ts"]
 
     # Cache tazeyse direkt dön
     if cached and age < CACHE_TTL_SECONDS:
@@ -258,6 +263,19 @@ def get_financial_data():
     if not _refreshing:
         _refreshing = True
         threading.Thread(target=_refresh_cache_background, daemon=True).start()
+
+    # Frontend null görür, UI kırılmaz
+    return {
+        "btc": None,
+        "gold": None,
+        "silver": None,
+        "copper": None,
+        "usd_try": None,
+        "eur_try": None,
+        "bist100": None,
+        "gram_altin": None,
+        "timestamp": datetime.now().isoformat(),
+    }
 
     # Frontend sadece null görür, UI kırılmaz (zaten null kontrolün vardı)
     return {
