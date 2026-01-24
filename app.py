@@ -739,6 +739,501 @@ def google_callback():
     session["user_id"] = u.id
     return redirect(url_for("index"))
 
+# ----------------------------
+# JSON API Endpoints (Frontend için)
+# ----------------------------
+
+# === AUTH APIs ===
+@app.route("/api/auth/register", methods=["POST"])
+def api_register():
+    """JSON API: Kayıt ol"""
+    data = request.get_json()
+    username = (data.get("username") or "").strip().lower()
+    full_name = (data.get("full_name") or "").strip()
+    password = data.get("password") or ""
+
+    if not username_is_valid(username):
+        return jsonify({"error": "Geçersiz kullanıcı adı"}), 400
+    if not full_name or len(full_name) < 2:
+        return jsonify({"error": "Geçersiz isim"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Şifre en az 6 karakter"}), 400
+
+    exists = db.session.query(User).filter_by(username=username).first()
+    if exists:
+        return jsonify({"error": "Kullanıcı adı alınmış"}), 409
+
+    u = User(
+        username=username,
+        full_name=full_name[:100],
+        password_hash=generate_password_hash(password),
+        avatar_type="ui",
+    )
+    db.session.add(u)
+    db.session.commit()
+
+    session["user_id"] = u.id
+    return jsonify({"success": True, "username": u.username})
+
+
+@app.route("/api/auth/login", methods=["POST"])
+def api_login():
+    """JSON API: Giriş yap"""
+    data = request.get_json()
+    username = (data.get("username") or "").strip().lower()
+    password = data.get("password") or ""
+
+    u = db.session.query(User).filter_by(username=username).first()
+    if not u or not u.password_hash or not check_password_hash(u.password_hash, password):
+        return jsonify({"error": "Hatalı bilgiler"}), 401
+
+    session["user_id"] = u.id
+    return jsonify({"success": True, "username": u.username})
+
+
+# === USER APIs ===
+@app.route("/api/me")
+def api_me():
+    """Mevcut kullanıcı bilgisi"""
+    u = current_user()
+    if not u:
+        return jsonify({"error": "Not logged in"}), 401
+    
+    return jsonify({
+        "id": u.id,
+        "username": u.username,
+        "full_name": u.full_name,
+        "bio": u.bio,
+        "avatar_url": u.avatar_url if u.avatar_type == "preset" else ui_avatar_url(u.full_name),
+        "avatar_type": u.avatar_type,
+    })
+
+
+@app.route("/api/profile/<username>")
+def api_profile(username):
+    """Profil bilgisi (JSON)"""
+    username = username.lower()
+    u = db.session.query(User).filter_by(username=username).first()
+    if not u:
+        return jsonify({"error": "User not found"}), 404
+
+    me = current_user()
+    
+    # Posts
+    posts = (
+        db.session.query(Post)
+        .filter(Post.user_id == u.id)
+        .order_by(Post.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    
+    posts_json = []
+    for p in posts:
+        avg, cnt = post_rating_summary(p.id)
+        posts_json.append({
+            "id": p.id,
+            "content": p.content,
+            "symbol_key": p.symbol_key,
+            "image_url": p.image_url,
+            "created_at": p.created_at.isoformat(),
+            "rating": {"avg": avg, "count": cnt}
+        })
+    
+    # Comments
+    comments = (
+        db.session.query(SymbolComment)
+        .filter(SymbolComment.user_id == u.id)
+        .order_by(SymbolComment.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    
+    comments_json = [{
+        "id": c.id,
+        "symbol_key": c.symbol_key,
+        "content": c.content,
+        "created_at": c.created_at.isoformat()
+    } for c in comments]
+    
+    # Follow stats
+    followers = db.session.query(Follow).filter(Follow.following_id == u.id).count()
+    following = db.session.query(Follow).filter(Follow.follower_id == u.id).count()
+    
+    is_following = False
+    if me and me.id != u.id:
+        is_following = (
+            db.session.query(Follow)
+            .filter(Follow.follower_id == me.id, Follow.following_id == u.id)
+            .first() is not None
+        )
+    
+    return jsonify({
+        "id": u.id,
+        "username": u.username,
+        "full_name": u.full_name,
+        "bio": u.bio,
+        "avatar_url": u.avatar_url if u.avatar_type == "preset" else ui_avatar_url(u.full_name),
+        "followers": followers,
+        "following": following,
+        "is_following": is_following,
+        "is_me": me and me.id == u.id,
+        "posts": posts_json,
+        "comments": comments_json,
+    })
+
+
+@app.route("/api/settings/profile", methods=["POST"])
+def api_settings_profile():
+    """Profil güncelle (JSON)"""
+    u = current_user()
+    if not u:
+        return jsonify({"error": "Login required"}), 401
+    
+    data = request.get_json()
+    full_name = (data.get("full_name") or "").strip()
+    bio = (data.get("bio") or "").strip()
+    avatar_mode = data.get("avatar_mode") or "ui"
+    avatar_url_val = data.get("avatar_url") or ""
+
+    if full_name:
+        u.full_name = full_name[:100]
+    u.bio = bio[:200]
+    
+    if avatar_mode == "ui":
+        u.avatar_type = "ui"
+        u.avatar_url = None
+    elif avatar_mode == "preset":
+        u.avatar_type = "preset"
+        u.avatar_url = avatar_url_val if avatar_url_val else None
+    
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+# === FEED APIs ===
+@app.route("/api/feed")
+def api_feed():
+    """Feed (JSON)"""
+    filter_type = request.args.get("filter", "all")
+    
+    # Alert üret (her feed yüklendiğinde)
+    try:
+        maybe_create_price_alerts()
+    except:
+        pass
+    
+    # FeedEvent'leri çek
+    query = db.session.query(FeedEvent).order_by(
+        FeedEvent.score.desc(), 
+        FeedEvent.created_at.desc()
+    )
+    
+    if filter_type == "posts":
+        query = query.filter(FeedEvent.type == "post")
+    elif filter_type == "alerts":
+        query = query.filter(FeedEvent.type == "alert")
+    elif filter_type == "hot":
+        query = query.filter(FeedEvent.score > 10)
+    
+    events = query.limit(50).all()
+    
+    items = []
+    for ev in events:
+        if ev.type == "post":
+            post = db.session.get(Post, ev.ref_id)
+            if not post:
+                continue
+            user = db.session.get(User, post.user_id)
+            avg, cnt = post_rating_summary(post.id)
+            
+            items.append({
+                "type": "post",
+                "id": post.id,
+                "content": post.content,
+                "symbol_key": post.symbol_key,
+                "image_url": post.image_url,
+                "created_at": post.created_at.isoformat(),
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "full_name": user.full_name,
+                } if user else None,
+                "rating": {"avg": avg, "count": cnt, "my": None}  # my rating TODO
+            })
+        
+        elif ev.type == "alert":
+            alert = db.session.get(PriceAlert, ev.ref_id)
+            if not alert:
+                continue
+            items.append({
+                "type": "alert",
+                "id": alert.id,
+                "created_at": alert.created_at.isoformat(),
+                "alert": {
+                    "symbol_key": alert.symbol_key,
+                    "change_pct": alert.change_pct,
+                    "window": alert.window,
+                    "price": alert.last_price,
+                }
+            })
+    
+    return jsonify({"items": items})
+
+
+@app.route("/api/posts", methods=["POST"])
+def api_create_post():
+    """Post oluştur (JSON)"""
+    u = current_user()
+    if not u:
+        return jsonify({"error": "Login required"}), 401
+    
+    data = request.get_json()
+    content = (data.get("content") or "").strip()
+    symbol_key = (data.get("symbol_key") or "").strip().upper() or None
+    
+    if not content:
+        return jsonify({"error": "Content required"}), 400
+    if len(content) > 800:
+        return jsonify({"error": "Too long"}), 400
+    
+    # Symbol normalize
+    symbol_map = {"BTC": "btc", "GOLD": "gold", "SILVER": "silver", 
+                  "USDTRY": "usd_try", "EURTRY": "eur_try", "BIST100": "bist100"}
+    symbol_key = symbol_map.get(symbol_key) if symbol_key else None
+    
+    p = Post(user_id=u.id, content=content, symbol_key=symbol_key)
+    db.session.add(p)
+    db.session.flush()
+    
+    fe = FeedEvent(type="post", ref_id=p.id, score=1.0)
+    db.session.add(fe)
+    db.session.commit()
+    
+    return jsonify({"success": True, "post_id": p.id})
+
+
+@app.route("/api/rate", methods=["POST"])
+def api_rate():
+    """Genel rating endpoint (post/comment/alert)"""
+    u = current_user()
+    if not u:
+        return jsonify({"error": "Login required"}), 401
+    
+    data = request.get_json()
+    kind = data.get("kind")  # "post" | "comment" | "alert"
+    ref_id = int(data.get("id"))
+    stars = int(data.get("stars"))
+    
+    if stars < 1 or stars > 5:
+        return jsonify({"error": "Invalid stars"}), 400
+    
+    if kind == "post":
+        r = db.session.query(PostRating).filter(
+            PostRating.post_id == ref_id,
+            PostRating.user_id == u.id
+        ).first()
+        if r:
+            r.stars = stars
+        else:
+            r = PostRating(post_id=ref_id, user_id=u.id, stars=stars)
+            db.session.add(r)
+        
+        avg, cnt = post_rating_summary(ref_id, refresh=True)
+        
+        # Feed event score güncelle
+        fe = db.session.query(FeedEvent).filter(
+            FeedEvent.type == "post",
+            FeedEvent.ref_id == ref_id
+        ).first()
+        if fe:
+            fe.score = float(avg) * (1.0 + (cnt / 10.0))
+        
+        db.session.commit()
+        return jsonify({"avg": avg, "count": cnt, "my": stars})
+    
+    elif kind == "comment":
+        r = db.session.query(CommentRating).filter(
+            CommentRating.comment_id == ref_id,
+            CommentRating.user_id == u.id
+        ).first()
+        if r:
+            r.stars = stars
+        else:
+            r = CommentRating(comment_id=ref_id, user_id=u.id, stars=stars)
+            db.session.add(r)
+        
+        avg, cnt = comment_rating_summary(ref_id)
+        db.session.commit()
+        return jsonify({"avg": avg, "count": cnt, "my": stars})
+    
+    return jsonify({"error": "Invalid kind"}), 400
+
+
+@app.route("/api/follow", methods=["POST"])
+def api_follow():
+    """Follow/unfollow (JSON)"""
+    me = current_user()
+    if not me:
+        return jsonify({"error": "Login required"}), 401
+    
+    data = request.get_json()
+    username = (data.get("username") or "").strip().lower()
+    action = data.get("action") or "follow"  # follow | unfollow
+    
+    target = db.session.query(User).filter_by(username=username).first()
+    if not target or target.id == me.id:
+        return jsonify({"error": "Invalid target"}), 404
+    
+    existing = db.session.query(Follow).filter(
+        Follow.follower_id == me.id,
+        Follow.following_id == target.id
+    ).first()
+    
+    if action == "unfollow" and existing:
+        db.session.delete(existing)
+        is_following = False
+    elif action == "follow" and not existing:
+        db.session.add(Follow(follower_id=me.id, following_id=target.id))
+        is_following = True
+    else:
+        is_following = existing is not None
+    
+    db.session.commit()
+    
+    followers = db.session.query(Follow).filter(Follow.following_id == target.id).count()
+    
+    return jsonify({
+        "is_following": is_following,
+        "followers": followers
+    })
+
+
+# === EXPLORE APIs ===
+@app.route("/api/explore")
+def api_explore():
+    """Keşfet (JSON)"""
+    q = request.args.get("q", "").strip()
+    
+    # Trend semboller (yorum sayısı)
+    symbol_rows = trending_symbols_by_comments(limit=10)
+    
+    # Her sembole değişim ekle
+    symbols = []
+    for row in symbol_rows:
+        key = row["symbol_key"]
+        sym_str = PRICE_SYMBOLS.get(key)
+        change_pct = None
+        if sym_str:
+            change_pct = compute_change_pct(sym_str)
+        
+        symbols.append({
+            "key": key.upper(),
+            "name": key.upper(),  # TODO: daha güzel isim
+            "change_pct": change_pct,
+            "comments": row["cnt"]
+        })
+    
+    # Top posts
+    top = top_posts_by_rating(limit=10)
+    posts = []
+    for item in top:
+        p = item["post"]
+        u = item["user"]
+        posts.append({
+            "id": p.id,
+            "content": p.content,
+            "symbol_key": p.symbol_key,
+            "created_at": p.created_at.isoformat(),
+            "user": {
+                "username": u.username,
+                "full_name": u.full_name
+            } if u else None,
+            "rating": {
+                "avg": item["avg"],
+                "count": item["cnt"]
+            }
+        })
+    
+    # TODO: Search q ile filtreleme
+    
+    return jsonify({
+        "symbols": symbols,
+        "posts": posts
+    })
+
+
+# === SYMBOL APIs ===
+@app.route("/api/symbol/<symbol_key>/comments")
+def api_symbol_comments(symbol_key):
+    """Symbol yorumları (JSON)"""
+    symbol_key = symbol_key.lower()
+    if symbol_key not in PRICE_SYMBOLS:
+        return jsonify({"error": "Invalid symbol"}), 404
+    
+    comments = (
+        db.session.query(SymbolComment)
+        .filter(SymbolComment.symbol_key == symbol_key)
+        .order_by(SymbolComment.created_at.desc())
+        .limit(100)
+        .all()
+    )
+    
+    items = []
+    for c in comments:
+        u = db.session.get(User, c.user_id)
+        avg, cnt = comment_rating_summary(c.id)
+        items.append({
+            "id": c.id,
+            "content": c.content,
+            "created_at": c.created_at.isoformat(),
+            "user": {
+                "id": u.id,
+                "username": u.username,
+                "full_name": u.full_name,
+            } if u else None,
+            "rating": {"avg": avg, "cnt": cnt}
+        })
+    
+    return jsonify({"items": items})
+
+
+@app.route("/api/symbol/<symbol_key>/comment", methods=["POST"])
+def api_symbol_add_comment(symbol_key):
+    """Yorum ekle (JSON)"""
+    u = current_user()
+    if not u:
+        return jsonify({"error": "Login required"}), 401
+    
+    symbol_key = symbol_key.lower()
+    if symbol_key not in PRICE_SYMBOLS:
+        return jsonify({"error": "Invalid symbol"}), 404
+    
+    data = request.get_json()
+    content = (data.get("content") or "").strip()
+    
+    if not content:
+        return jsonify({"error": "Content required"}), 400
+    if len(content) > 2000:
+        return jsonify({"error": "Too long"}), 400
+    
+    c = SymbolComment(symbol_key=symbol_key, user_id=u.id, content=content)
+    db.session.add(c)
+    db.session.commit()
+    
+    return jsonify({
+        "success": True,
+        "comment": {
+            "id": c.id,
+            "content": c.content,
+            "created_at": c.created_at.isoformat(),
+            "user": {
+                "id": u.id,
+                "username": u.username,
+                "full_name": u.full_name,
+            }
+        }
+    }), 201
 
 # ----------------------------
 # Routes: Social actions
