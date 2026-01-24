@@ -311,45 +311,54 @@
     if (!r.ok) throw new Error(await r.text());
     return await r.json();
   }
+  function buildStars({ kind, id, myStars, avgStars, count }) {
+  const safeKind = kind === "alert" ? "alert" : "post";
+  const safeId = Number(id);
+
+  const wrap = document.createElement("div");
+  wrap.className = "stars";
+  wrap.setAttribute("data-kind", safeKind);
+  wrap.setAttribute("data-id", safeId);
+
+  for (let s = 1; s <= 5; s++) {
+    const b = document.createElement("div");
+    // ✅ s <= myStars (4 yıldız verdiyse 1,2,3,4 dolu)
+    b.className = "star-btn" + (s <= myStars ? " active" : "");
+    b.title = `${s} yıldız`;
+    b.textContent = "★";
+    b.onclick = async () => {
+      try {
+        const res = await apiPost("/api/rate", { kind: safeKind, id: safeId, stars: s });
+        updateStarsUI(wrap, res.my, res.avg, res.count);
+      } catch (error) {
+        showComposerError("Oylama için giriş yapman gerekebilir.");
+      }
+    };
+    wrap.appendChild(b);
+  }
+
+  const c = document.createElement("span");
+  c.className = "stars-count";
+  c.textContent = `Ort: ${Number(avgStars || 0).toFixed(1)} • Oy: ${count || 0}`;
+  wrap.appendChild(c);
+
+  return wrap;
+}
+
+function updateStarsUI(starsWrap, my, avg, count) {
+  const btns = Array.from(starsWrap.querySelectorAll(".star-btn"));
+  btns.forEach((b, idx) => {
+    const s = idx + 1;
+    // ✅ s <= my (4 yıldız verdiyse 1,2,3,4 dolu)
+    b.classList.toggle("active", s <= my);
+  });
+  const c = starsWrap.querySelector(".stars-count");
+  if (c) c.textContent = `Ort: ${Number(avg || 0).toFixed(1)} • Oy: ${count || 0}`;
+}
+
 
   // ---- Render
-  function buildStars({ kind, id, myStars, avgStars, count }) {
-    const safeKind = kind === "alert" ? "alert" : "post";
-    const safeId = Number(id);
-
-    const wrap = document.createElement("div");
-    wrap.className = "stars";
-    wrap.setAttribute("data-kind", safeKind);
-    wrap.setAttribute("data-id", safeId);
-
-    for (let s = 1; s <= 5; s++) {
-      const b = document.createElement("div");
-      b.className = "star-btn" + (myStars === s ? " active" : "");
-      b.title = `${s} yıldız`;
-      b.textContent = "★";
-      b.onclick = async () => {
-        try {
-          // Endpoint'leri backend'de açacağız:
-          // POST /api/rate  { kind:"post"|"comment"|"alert", id: 123, stars: 1..5 }
-          const res = await apiPost("/api/rate", { kind: safeKind, id: safeId, stars: s });
-          // res: { avg: 4.2, count: 31, my: 5 } gibi
-          // UI güncelle
-          updateStarsUI(wrap, res.my, res.avg, res.count);
-        } catch (e) {
-          // giriş yoksa veya endpoint yoksa sessiz kalmayalım
-          showComposerError("Oylama için giriş yapman gerekebilir (veya endpoint henüz aktif değil).");
-        }
-      };
-      wrap.appendChild(b);
-    }
-
-    const c = document.createElement("span");
-    c.className = "stars-count";
-    c.textContent = `Ort: ${Number(avgStars || 0).toFixed(1)} • Oy: ${count || 0}`;
-    wrap.appendChild(c);
-
-    return wrap;
-  }
+  
 
   function updateStarsUI(starsWrap, my, avg, count) {
     const btns = Array.from(starsWrap.querySelectorAll(".star-btn"));
