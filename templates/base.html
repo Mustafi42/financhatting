@@ -15,6 +15,61 @@
   --panel2: #0f172a;
   --border: #334155;
 }
+/* Mobil responsive - mevcut CSS'in SONUNA ekle */
+@media (max-width: 768px) {
+  /* Sidebar mobilde gizle */
+  .sidebar { 
+    display: none; 
+  }
+  
+  /* Main genişlik doldursun */
+  .main { 
+    padding: 10px; 
+    max-width: 100%; 
+  }
+  
+  /* Ticker daha küçük */
+  .ticker { 
+    gap: 8px; 
+    padding: 8px; 
+  }
+  
+  .tick { 
+    min-width: 140px; 
+    padding: 6px 8px; 
+  }
+  
+  .tick .k { 
+    font-size: 0.75em; 
+  }
+  
+  .tick .v { 
+    font-size: 0.9em; 
+  }
+  
+  /* Butonlar daha büyük (dokunma alanı) */
+  .btn { 
+    padding: 12px 16px; 
+    font-size: 1em; 
+  }
+  
+  /* Input alanları daha rahat */
+  input, textarea { 
+    font-size: 16px; /* iOS zoom önler */
+    padding: 14px; 
+  }
+}
+
+/* Çok küçük ekranlar (iPhone SE gibi) */
+@media (max-width: 375px) {
+  .tick { 
+    min-width: 120px; 
+  }
+  
+  .page-title { 
+    font-size: 1.6em; 
+  }
+}
 
     *{margin:0;padding:0;box-sizing:border-box}
     body{
@@ -171,5 +226,87 @@
     loadMiniTicker();
     setInterval(loadMiniTicker, 30000);
   </script>
+  <!-- Mobil bottom nav -->
+<nav class="mobile-nav">
+  <a href="/" class="nav-item">
+    <span>🏠</span>
+    <small>Ana Sayfa</small>
+  </a>
+  <a href="/feed" class="nav-item">
+    <span>🧵</span>
+    <small>Feed</small>
+  </a>
+  <a href="/explore" class="nav-item">
+    <span>🧭</span>
+    <small>Keşfet</small>
+  </a>
+  {% if user %}
+  <a href="/@{{ user.username }}" class="nav-item">
+    <span>👤</span>
+    <small>Profil</small>
+  </a>
+  {% else %}
+  <a href="/auth/login" class="nav-item">
+    <span>🔐</span>
+    <small>Giriş</small>
+  </a>
+  {% endif %}
+</nav>
+
+<style>
+  /* Mobil bottom navigation */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #334155;
+    padding: 8px 0;
+    z-index: 9999;
+  }
+  
+  @media (max-width: 768px) {
+    .mobile-nav {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+    
+    /* Ana içeriğe padding ekle (bottom nav için yer aç) */
+    .main {
+      padding-bottom: 80px !important;
+    }
+  }
+  
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #94a3b8;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-item:active {
+    background: rgba(16, 185, 129, 0.1);
+    transform: scale(0.95);
+  }
+  
+  .nav-item span {
+    font-size: 1.4em;
+  }
+  
+  .nav-item small {
+    font-size: 0.75em;
+    font-weight: 600;
+  }
+</style>
+
 </body>
 </html>
