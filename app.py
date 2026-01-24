@@ -935,6 +935,62 @@ def api_create_post():
     db.session.commit()
     
     return jsonify({"success": True, "post_id": p.id})
+@app.route("/api/posts/<int:post_id>", methods=["DELETE"])
+def api_delete_post(post_id):
+    """Post sil"""
+    u = current_user()
+    if not u:
+        return jsonify({"error": "Login required"}), 401
+    
+    post = db.session.get(Post, post_id)
+    if not post:
+        return jsonify({"error": "Not found"}), 404
+    
+    if post.user_id != u.id:
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    # Feed event'i de sil
+    db.session.query(FeedEvent).filter(
+        FeedEvent.type == "post",
+        FeedEvent.ref_id == post_id
+    ).delete()
+    
+    # Rating'leri sil
+    db.session.query(PostRating).filter(PostRating.post_id == post_id).delete()
+    
+    # Post'u sil
+    db.session.delete(post)
+    db.session.commit()
+    
+    return jsonify({"success": True})
+
+
+@app.route("/api/posts/<int:post_id>", methods=["PATCH"])
+def api_edit_post(post_id):
+    """Post düzenle"""
+    u = current_user()
+    if not u:
+        return jsonify({"error": "Login required"}), 401
+    
+    post = db.session.get(Post, post_id)
+    if not post:
+        return jsonify({"error": "Not found"}), 404
+    
+    if post.user_id != u.id:
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    data = request.get_json()
+    new_content = (data.get("content") or "").strip()
+    
+    if not new_content:
+        return jsonify({"error": "Content required"}), 400
+    if len(new_content) > 800:
+        return jsonify({"error": "Too long"}), 400
+    
+    post.content = new_content
+    db.session.commit()
+    
+    return jsonify({"success": True, "content": post.content})
 
 
 @app.route("/api/rate", methods=["POST"])
