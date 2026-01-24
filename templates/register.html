@@ -1,32 +1,32 @@
 {% extends "base.html" %}
-{% block title %}Kayıt • Financhatting{% endblock %}
+{% block title %}Kayıt Ol • Financhatting{% endblock %}
 
 {% block content %}
 <div class="page">
   <div class="wrap">
     <div class="card">
-      <h1>🧾 Kayıt Ol</h1>
-      <p class="muted">Twitter mantığı: username sabit, profil URL'in /@username olur.</p>
+      <h1>🔐 Kayıt Ol</h1>
+      <p class="muted">Finansal sosyal ağa katılın.</p>
 
       <label class="field">
         <span>Ad Soyad</span>
-        <input id="full_name" placeholder="Mustafa Çelik" autocomplete="name" />
+        <input id="full_name" placeholder="Ad Soyad" autocomplete="name" />
       </label>
 
       <label class="field">
-        <span>Kullanıcı adı</span>
-        <input id="username" placeholder="mustafi42" autocomplete="username" />
-        <small>Harf/rakam/._ önerilir. Boşluk yok.</small>
+        <span>Kullanıcı Adı</span>
+        <input id="username" placeholder="kullaniciadi" autocomplete="username" />
+        <small>Küçük harf, rakam ve _ kullanabilirsiniz.</small>
       </label>
 
       <label class="field">
         <span>Şifre</span>
-        <input id="password" type="password" placeholder="••••••••" autocomplete="new-password" />
+        <input id="password" type="password" placeholder="Minimum 6 karakter" autocomplete="new-password" />
       </label>
 
       <div class="actions">
-        <button class="btn btn-primary" id="btnRegister">Kayıt</button>
-        <a class="btn btn-ghost" href="/login">Giriş</a>
+        <button class="btn btn-primary" id="btnRegister">Kayıt Ol</button>
+        <a class="btn btn-ghost" href="/login">Zaten hesabım var</a>
       </div>
 
       <div id="msg" class="msg" style="display:none;"></div>
@@ -38,36 +38,78 @@
 {% block extra_css %}
 <style>
   .page { padding: 20px 6px 60px; }
-  .wrap { max-width: 560px; margin: 0 auto; }
+  .wrap { max-width: 480px; margin: 0 auto; }
   .card {
     background: linear-gradient(145deg, var(--panel) 0%, var(--panel2) 100%);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 18px;
+    padding: 24px;
   }
-  h1 { margin: 0 0 6px; color: var(--green); text-shadow: 0 0 20px rgba(16, 185, 129, 0.25); }
-  .muted { color: var(--muted); margin: 0 0 14px; }
-  .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-  .field span { color: var(--muted); font-weight: 900; }
+  h1 { 
+    margin: 0 0 8px; 
+    color: var(--green); 
+    text-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+    font-size: 1.8em;
+  }
+  .muted { 
+    color: var(--muted); 
+    margin: 0 0 24px;
+    font-size: 0.95em;
+  }
+  .field { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 8px; 
+    margin-bottom: 16px; 
+  }
+  .field span { 
+    color: var(--text); 
+    font-weight: 600;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
   input {
     border: 1px solid var(--border);
     background: rgba(15, 23, 42, 0.35);
     color: var(--text);
-    border-radius: 14px;
-    padding: 12px 14px;
+    border-radius: 12px;
+    padding: 14px 16px;
     outline: none;
     font-family: inherit;
+    font-size: 1em;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
-  small { color: var(--muted2); font-size: 0.9em; }
-  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+  small { 
+    color: var(--muted2); 
+    font-size: 0.85em;
+    margin-top: -4px;
+  }
+  .actions { 
+    display: flex; 
+    gap: 10px; 
+    flex-wrap: wrap; 
+    align-items: center; 
+    margin-top: 20px; 
+  }
   .msg {
-    margin-top: 12px;
-    padding: 10px 12px;
+    margin-top: 16px;
+    padding: 12px 14px;
     border-radius: 12px;
     border: 1px solid rgba(239, 68, 68, 0.65);
     background: rgba(239, 68, 68, 0.12);
     color: #fca5a5;
-    font-weight: 900;
+    font-weight: 600;
+    font-size: 0.9em;
+  }
+  
+  @media (max-width: 768px) {
+    .wrap { max-width: 100%; }
+    .card { padding: 20px; }
   }
 </style>
 {% endblock %}
@@ -93,11 +135,19 @@
   
   async function register() {
     const full_name = (document.getElementById("full_name").value || "").trim();
-    const username = (document.getElementById("username").value || "").trim();
+    const username = (document.getElementById("username").value || "").trim().toLowerCase();
     const password = (document.getElementById("password").value || "").trim();
     
     if (!full_name || !username || !password) {
-      return showMsg("Tüm alanlar gerekli.");
+      return showMsg("Lütfen tüm alanları doldurun.");
+    }
+    
+    if (username.length < 3) {
+      return showMsg("Kullanıcı adı en az 3 karakter olmalı.");
+    }
+    
+    if (password.length < 6) {
+      return showMsg("Şifre en az 6 karakter olmalı.");
     }
     
     try {
@@ -106,7 +156,7 @@
       window.location.href = "/feed";
     } catch (e) {
       console.error(e);
-      showMsg("Kayıt başarısız. Username alınmış olabilir.");
+      showMsg("Kayıt başarısız. Bu kullanıcı adı alınmış olabilir.");
     } finally {
       document.getElementById("btnRegister").disabled = false;
     }
