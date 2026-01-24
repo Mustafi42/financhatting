@@ -33,12 +33,10 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 # DATABASE_URL (Railway)
 db_url = os.environ.get("DATABASE_URL")
 if db_url and db_url.startswith("postgres://"):
-    # Railway/Heroku bazen postgres:// verir, SQLAlchemy postgresql:// bekler
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///local.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
 db = SQLAlchemy(app)
 
 # ----------------------------
@@ -73,61 +71,35 @@ class User(db.Model):
     avatar_type = db.Column(db.String(16), nullable=False, default="ui")  # ui | preset | upload
     avatar_url = db.Column(db.Text, nullable=True)
 
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
 
 class Follow(db.Model):
     __tablename__ = "follows"
     id = db.Column(db.BigInteger, primary_key=True)
-    follower_id = db.Column(
-        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    following_id = db.Column(
-        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    follower_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    following_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     __table_args__ = (db.UniqueConstraint("follower_id", "following_id", name="uq_follow_pair"),)
 
 
 class Post(db.Model):
     __tablename__ = "posts"
     id = db.Column(db.BigInteger, primary_key=True)
-    user_id = db.Column(
-        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     symbol_key = db.Column(db.String(16), nullable=True, index=True)  # opsiyonel (btc, gold vs.)
     image_url = db.Column(db.Text, nullable=True)
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
 
 class PostRating(db.Model):
     __tablename__ = "post_ratings"
     id = db.Column(db.BigInteger, primary_key=True)
-    post_id = db.Column(
-        db.BigInteger, db.ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    user_id = db.Column(
-        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    post_id = db.Column(db.BigInteger, db.ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     stars = db.Column(db.SmallInteger, nullable=False)  # 1..5
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     __table_args__ = (db.UniqueConstraint("post_id", "user_id", name="uq_post_rating_once"),)
 
 
@@ -135,32 +107,18 @@ class SymbolComment(db.Model):
     __tablename__ = "symbol_comments"
     id = db.Column(db.BigInteger, primary_key=True)
     symbol_key = db.Column(db.String(16), nullable=False, index=True)
-    user_id = db.Column(
-        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
 
 class CommentRating(db.Model):
     __tablename__ = "comment_ratings"
     id = db.Column(db.BigInteger, primary_key=True)
-    comment_id = db.Column(
-        db.BigInteger, db.ForeignKey("symbol_comments.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    user_id = db.Column(
-        db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    stars = db.Column(db.SmallInteger, nullable=False)  # 1..5
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    comment_id = db.Column(db.BigInteger, db.ForeignKey("symbol_comments.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.BigInteger, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    stars = db.Column(db.SmallInteger, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
     __table_args__ = (db.UniqueConstraint("comment_id", "user_id", name="uq_comment_rating_once"),)
 
 
@@ -171,11 +129,7 @@ class PriceAlert(db.Model):
     change_pct = db.Column(db.Float, nullable=False)
     window = db.Column(db.String(8), nullable=False, default="1d")
     last_price = db.Column(db.Float, nullable=True)
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
 
 class FeedEvent(db.Model):
@@ -184,11 +138,7 @@ class FeedEvent(db.Model):
     type = db.Column(db.String(16), nullable=False)  # post | alert
     ref_id = db.Column(db.BigInteger, nullable=False, index=True)
     score = db.Column(db.Float, nullable=False, default=0.0)
-    created_at = db.Column(
-        db.DateTime(timezone=True),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
 
 # ----------------------------
@@ -224,7 +174,7 @@ def username_is_valid(u: str) -> bool:
 
 
 # ----------------------------
-# Finance Data + Non-blocking Cache
+# Finance Data (NON-BLOCKING)
 # ----------------------------
 PRICE_SYMBOLS = {
     "btc": "BTC-USD",
@@ -239,75 +189,10 @@ PRICE_SYMBOLS = {
 CACHE_TTL_SECONDS = 25  # frontend 30sn'de bir çağırıyor
 _last_good = {"data": None, "ts": 0.0}
 _lock = threading.Lock()
-_refreshing = False
+_worker_started = False
 
 
-def _fetch_prices_once():
-    prices = {}
-
-    for key, symbol in PRICE_SYMBOLS.items():
-        try:
-            t = yf.Ticker(symbol)
-            data = t.history(period="5d", interval="1d")
-            if data is not None and not data.empty:
-                close = data["Close"].dropna()
-                prices[key] = float(close.iloc[-1]) if not close.empty else None
-            else:
-                prices[key] = None
-        except Exception as e:
-            print(f"Ticker hata {symbol}: {e}")
-            prices[key] = None
-
-    # Gram Altın TL (Ons / 31.1035 * USDTRY)
-    if prices.get("gold") and prices.get("usd_try"):
-        prices["gram_altin"] = (prices["gold"] / 31.1035) * prices["usd_try"]
-    else:
-        prices["gram_altin"] = None
-
-    prices["timestamp"] = datetime.now().isoformat()
-    return prices
-
-
-def _refresh_cache_background():
-    global _refreshing
-    try:
-        data = _fetch_prices_once()
-        got_any = any(data.get(k) is not None for k in ["btc", "gold", "usd_try", "eur_try"])
-        if got_any:
-            with _lock:
-                _last_good["data"] = data
-                _last_good["ts"] = time.time()
-    finally:
-        _refreshing = False
-
-
-def get_financial_data():
-    """
-    ASLA BLOKLAMAZ.
-    - Cache tazeyse cache döner
-    - Cache bayatsa cache döner, arkada yeniler
-    - Cache yoksa placeholder döner, arkada yeniler
-    """
-    global _refreshing
-
-    now_ts = time.time()
-    with _lock:
-        cached = _last_good["data"]
-        age = now_ts - _last_good["ts"]
-
-    if cached and age < CACHE_TTL_SECONDS:
-        return cached
-
-    if cached:
-        if not _refreshing:
-            _refreshing = True
-            threading.Thread(target=_refresh_cache_background, daemon=True).start()
-        return cached
-
-    if not _refreshing:
-        _refreshing = True
-        threading.Thread(target=_refresh_cache_background, daemon=True).start()
-
+def _placeholder_prices():
     return {
         "btc": None,
         "gold": None,
@@ -321,70 +206,127 @@ def get_financial_data():
     }
 
 
-def compute_change_pct(yahoo_symbol: str):
-    """
-    1 günlük yüzde değişimi hesaplar (close[-1] vs close[-2]).
-    Yahoo/yfinance boş dönerse None döner, feed patlamaz.
-    """
+def _safe_float(x):
     try:
-        t = yf.Ticker(yahoo_symbol)
-        df = t.history(period="5d", interval="1d")
-        if df is None or df.empty:
-            return None
-
-        close = df["Close"].dropna()
-        if len(close) < 2:
-            return None
-
-        last = float(close.iloc[-1])
-        prev = float(close.iloc[-2])
-        if prev == 0:
-            return None
-
-        return ((last - prev) / prev) * 100.0
-    except Exception as e:
-        print("compute_change_pct hata:", yahoo_symbol, e)
+        return float(x)
+    except Exception:
         return None
 
 
-def maybe_create_price_alerts():
-    """%20+ değişim varsa feed'e alert düşür (son 24 saatte 1 defa / sembol)."""
-    since = now_utc() - timedelta(hours=24)
-
-    for k, sym in PRICE_SYMBOLS.items():
-        pct = compute_change_pct(sym)
-        if pct is None:
-            continue
-        if abs(pct) < 20:
-            continue
-
-        exists = (
-            db.session.query(PriceAlert)
-            .filter(PriceAlert.symbol_key == k, PriceAlert.created_at >= since)
-            .first()
+def _fetch_prices_batch():
+    """
+    Tek seferde çekmeye çalışır. Başarısızsa None döner.
+    Bu fonksiyon request thread'inde çağrılmıyor (arka planda çalışıyor).
+    """
+    try:
+        tickers = list(PRICE_SYMBOLS.values())  # ['BTC-USD', ...]
+        df = yf.download(
+            tickers=" ".join(tickers),
+            period="5d",
+            interval="1d",
+            group_by="ticker",
+            auto_adjust=False,
+            threads=False,
+            progress=False,
         )
-        if exists:
-            continue
+        if df is None or getattr(df, "empty", True):
+            return None
 
-        last_price = None
-        try:
-            t = yf.Ticker(sym)
-            d = t.history(period="5d", interval="1d")
-            if d is not None and not d.empty:
-                close = d["Close"].dropna()
-                last_price = float(close.iloc[-1]) if not close.empty else None
-        except Exception:
-            pass
+        prices = {}
+        for k, sym in PRICE_SYMBOLS.items():
+            close_series = None
+            try:
+                # Çoklu ticker gelince kolonlar MultiIndex olur.
+                if isinstance(df.columns, type(getattr(df, "columns"))):
+                    if sym in df.columns.get_level_values(0):
+                        close_series = df[(sym, "Close")]
+                    else:
+                        # Tek ticker gibi geldiyse:
+                        close_series = df["Close"]
+                else:
+                    close_series = None
+            except Exception:
+                close_series = None
 
-        alert = PriceAlert(symbol_key=k, change_pct=float(pct), window="1d", last_price=last_price)
-        db.session.add(alert)
-        db.session.flush()  # id üret
+            if close_series is not None:
+                close_series = close_series.dropna()
+                prices[k] = _safe_float(close_series.iloc[-1]) if len(close_series) else None
+            else:
+                prices[k] = None
 
-        score = abs(float(pct)) + 10.0
-        fe = FeedEvent(type="alert", ref_id=alert.id, score=score)
-        db.session.add(fe)
+        # Gram Altın TL
+        if prices.get("gold") and prices.get("usd_try"):
+            prices["gram_altin"] = (prices["gold"] / 31.1035) * prices["usd_try"]
+        else:
+            prices["gram_altin"] = None
 
-    db.session.commit()
+        prices["timestamp"] = datetime.now().isoformat()
+        return prices
+    except Exception as e:
+        print("yfinance batch fetch hata:", e)
+        return None
+
+
+def _maybe_create_price_alerts_from_cache(cached_prices: dict):
+    """
+    Cache üzerinden (mümkünse) alert üretir.
+    Burada %20+ alert için 5d kapanışa ihtiyaç var; batch fetch başarısızsa zaten uğraşma.
+    """
+    # Şimdilik basit: cache'de pct yoksa alert üretmeyelim (feed'i asla yavaşlatma).
+    # İstersen ileride burada ayrı bir batch ile (Close[-1]/Close[-2]) hesaplanır.
+    return
+
+
+def _bg_loop():
+    """
+    Sürekli arka planda:
+    - fiyat cache tazeler
+    - (istersen) alert üretir
+    """
+    while True:
+        data = _fetch_prices_batch()
+        if data:
+            with _lock:
+                _last_good["data"] = data
+                _last_good["ts"] = time.time()
+            try:
+                _maybe_create_price_alerts_from_cache(data)
+            except Exception as e:
+                print("alert bg hata:", e)
+
+        time.sleep(max(10, CACHE_TTL_SECONDS))
+
+
+def _ensure_bg_started():
+    global _worker_started
+    if _worker_started:
+        return
+    _worker_started = True
+    t = threading.Thread(target=_bg_loop, daemon=True)
+    t.start()
+
+
+def get_financial_data():
+    """
+    ASLA BLOKLAMAZ.
+    - Cache tazeyse cache döner
+    - Cache bayatsa cache döner (arkada bg thread zaten yeniliyor)
+    - Cache yoksa placeholder döner
+    """
+    _ensure_bg_started()
+
+    now_ts = time.time()
+    with _lock:
+        cached = _last_good["data"]
+        age = now_ts - _last_good["ts"]
+
+    if cached and age < CACHE_TTL_SECONDS:
+        return cached
+
+    if cached:
+        return cached
+
+    return _placeholder_prices()
 
 
 # ----------------------------
@@ -468,11 +410,7 @@ def index():
 
 @app.route("/feed")
 def feed():
-    try:
-        maybe_create_price_alerts()
-    except Exception as e:
-        print("alert üretim hatası:", e)
-
+    # NOT: burada yfinance çağırmıyoruz -> worker timeout riski yok.
     events = (
         db.session.query(FeedEvent)
         .order_by(FeedEvent.score.desc(), FeedEvent.created_at.desc())
@@ -661,7 +599,7 @@ def register():
 def login():
     if request.method == "POST":
         username = (request.form.get("username") or "").strip().lower()
-        password = (request.form.get("password") or "").strip()
+        password = request.form.get("password") or ""
 
         u = db.session.query(User).filter_by(username=username).first()
         if not u or not u.password_hash or not check_password_hash(u.password_hash, password):
@@ -735,7 +673,6 @@ def create_post():
     lr = login_required()
     if lr:
         return lr
-
     u = current_user()
     content = (request.form.get("content") or "").strip()
     symbol_key = (request.form.get("symbol_key") or "").strip().lower() or None
@@ -766,7 +703,6 @@ def rate_post(post_id):
     lr = login_required()
     if lr:
         return lr
-
     u = current_user()
     stars = int(request.form.get("stars") or "0")
     if stars < 1 or stars > 5:
@@ -784,7 +720,8 @@ def rate_post(post_id):
     if r:
         r.stars = stars
     else:
-        db.session.add(PostRating(post_id=post_id, user_id=u.id, stars=stars))
+        r = PostRating(post_id=post_id, user_id=u.id, stars=stars)
+        db.session.add(r)
 
     avg, cnt = post_rating_summary(post_id)
     fe = db.session.query(FeedEvent).filter(FeedEvent.type == "post", FeedEvent.ref_id == post_id).first()
@@ -800,7 +737,6 @@ def add_symbol_comment(symbol_key):
     lr = login_required()
     if lr:
         return lr
-
     symbol_key = symbol_key.lower()
     if symbol_key not in PRICE_SYMBOLS:
         abort(404)
@@ -822,7 +758,6 @@ def rate_comment(comment_id):
     lr = login_required()
     if lr:
         return lr
-
     u = current_user()
     stars = int(request.form.get("stars") or "0")
     if stars < 1 or stars > 5:
@@ -840,7 +775,8 @@ def rate_comment(comment_id):
     if r:
         r.stars = stars
     else:
-        db.session.add(CommentRating(comment_id=comment_id, user_id=u.id, stars=stars))
+        r = CommentRating(comment_id=comment_id, user_id=u.id, stars=stars)
+        db.session.add(r)
 
     db.session.commit()
     return redirect(request.referrer or url_for("symbol_page", symbol_key=c.symbol_key))
@@ -851,7 +787,6 @@ def follow_user(username):
     lr = login_required()
     if lr:
         return lr
-
     me = current_user()
     username = username.lower()
     target = db.session.query(User).filter_by(username=username).first()
@@ -873,7 +808,7 @@ def follow_user(username):
 
 
 # ----------------------------
-# Routes: APIs
+# APIs (prices/calendar)
 # ----------------------------
 @app.route("/api/prices")
 def prices_api():
@@ -882,27 +817,11 @@ def prices_api():
 
 @app.route("/api/calendar")
 def calendar_api():
-    # şimdilik hardcoded
     data = {
         "fed_rate": {"current": 4.50, "next_meeting": "2026-01-28"},
-        "nonfarm_payroll": {
-            "label": "Tarım Dışı İstihdam",
-            "value": "215K",
-            "previous": "190K",
-            "date": "2026-02-06",
-        },
-        "unemployment": {
-            "label": "İşsizlik Oranı",
-            "value": "3.9%",
-            "previous": "4.0%",
-            "date": "2026-02-06",
-        },
-        "inflation": {
-            "label": "TR Enflasyon (TÜFE)",
-            "value": "44.2%",
-            "previous": "45.1%",
-            "date": "2026-02-03",
-        },
+        "nonfarm_payroll": {"label": "Tarım Dışı İstihdam", "value": "215K", "previous": "190K", "date": "2026-02-06"},
+        "unemployment": {"label": "İşsizlik Oranı", "value": "3.9%", "previous": "4.0%", "date": "2026-02-06"},
+        "inflation": {"label": "TR Enflasyon (TÜFE)", "value": "44.2%", "previous": "45.1%", "date": "2026-02-03"},
     }
     return jsonify(data)
 
